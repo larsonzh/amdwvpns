@@ -7,6 +7,7 @@
 # BEIGIN
 
 # -------- lzvpns.sh transfer data area ---------
+# ---------- Don't manually modify !!! ----------
 WAN_ACCESS_PORT=0
 VPN_WAN_PORT=0
 POLLING_TIME=5
@@ -18,6 +19,7 @@ OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 SYSLOG_FILE="/tmp/syslog.log"
+# ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
 
 # END
