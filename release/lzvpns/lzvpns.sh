@@ -2,6 +2,13 @@
 # lzvpns.sh v0.0.1
 # By LZ (larsonzhang@gmail.com)
 
+# LZ script for asuswrt/merlin based router
+
+# Script command:
+# Start/Restart:  ./lzvpns.sh
+# Stop:           ./lzvpns.sh stop
+
+
 # Main execution script
 
 # BEIGIN
