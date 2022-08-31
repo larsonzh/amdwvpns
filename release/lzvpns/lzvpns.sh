@@ -67,7 +67,7 @@ SYSLOG_FILE="/tmp/syslog.log"
 cleaning_user_data() {
     [ "${WAN_ACCESS_PORT}" -lt 0 -o "${WAN_ACCESS_PORT}" -gt 1 ] && WAN_ACCESS_PORT=0
     [ "${VPN_WAN_PORT}" -lt 0 -o "${VPN_WAN_PORT}" -gt 1 ] && VPN_WAN_PORT=0
-    [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 1 ] && POLLING_TIME=5
+    [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 10 ] && POLLING_TIME=5
 }
 
 directory_file_management() {
