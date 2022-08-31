@@ -31,6 +31,9 @@ POLLING_TIME=5
 
 # --------------- global variable ---------------
 
+# System event log file
+SYSLOG_FILE="/tmp/syslog.log"
+
 # Project ID
 PROJECT_ID=lzvpns
 
@@ -63,9 +66,6 @@ IP_RULE_PRIO_HOST=999
 
 # VPN client access WAN policy routing rule priority
 IP_RULE_PRIO_VPN=998
-
-# System event log file
-SYSLOG_FILE="/tmp/syslog.log"
 
 
 # ------------------ Function -------------------
