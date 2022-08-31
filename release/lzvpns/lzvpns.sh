@@ -61,6 +61,7 @@ WAN1=200
 # System event log file
 SYSLOG_FILE="/tmp/syslog.log"
 
+
 # ------------------ Function -------------------
 
 cleaning_user_data() {
@@ -98,6 +99,7 @@ directory_file_management() {
 		exit 1
 	fi
 }
+
 
 # ------------ Script code execution ------------
 
