@@ -55,6 +55,7 @@ PATH_BOOTLOADER="/jffs/scripts"
 PATH_LZ="${0%/*}"
 [ "${PATH_LZ:0:1}" != '/' ] && PATH_LZ="$( pwd )${PATH_LZ#*.}"
 PATH_INTERFACE="${PATH_LZ}/interface"
+PATH_DAEMON="${PATH_LZ}/daemon"
 PATH_TMP="${PATH_LZ}/tmp"
 
 # Router WAN port VPN routing table ID.
@@ -109,8 +110,8 @@ check_file() {
 		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist. | tee -ai ${SYSLOG_FILE} 2> /dev/null
 		scripts_file_exist=1
 	}
-	[ ! -f ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} ] && {
-		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist. | tee -ai ${SYSLOG_FILE} 2> /dev/null
+	[ ! -f ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ] && {
+		echo $(date) [$$]: ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} does not exist. | tee -ai ${SYSLOG_FILE} 2> /dev/null
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
@@ -133,8 +134,22 @@ clear_routing_table() {
 	ip route flush cache > /dev/null 2>&1
 }
 
+transfer_parameters() {
+	sed -i "s:WAN_ACCESS_PORT=.*$:WAN_ACCESS_PORT="${WAN_ACCESS_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:POLLING_TIME=.*$:POLLING_TIME="${POLLING_TIME}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:VPN_WAN0=.*$:VPN_WAN0="${VPN_WAN0}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:VPN_WAN1=.*$:VPN_WAN1="${VPN_WAN1}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:IP_RULE_PRIO_HOST=.*$:IP_RULE_PRIO_HOST="${IP_RULE_PRIO_HOST}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:IP_RULE_PRIO_VPN=.*$:IP_RULE_PRIO_VPN="${IP_RULE_PRIO_VPN}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:OVPN_SUBNET_IP_SET=.*$:OVPN_SUBNET_IP_SET="${OVPN_SUBNET_IP_SET}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:PPTP_CLIENT_IP_SET=.*$:PPTP_CLIENT_IP_SET="${PPTP_CLIENT_IP_SET}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:IPSEC_SUBNET_IP_SET=.*$:IPSEC_SUBNET_IP_SET="${IPSEC_SUBNET_IP_SET}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:SYSLOG_FILE=.*$:SYSLOG_FILE="${SYSLOG_FILE}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+}
 
-# ------------ Script code execution ------------
+
+# -------------- Script execution ---------------
 
 cleaning_user_data
 clear_ip_rules "${IP_RULE_PRIO_VPN}"
@@ -143,5 +158,6 @@ clear_routing_table "${VPN_WAN0}"
 clear_routing_table "${VPN_WAN1}"
 init_directory
 check_file
+transfer_parameters
 
 # END
