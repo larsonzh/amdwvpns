@@ -5,7 +5,7 @@ This project is used to solve the problem that the client can't access and use t
 
 The router VPN servers involved in this project include OpenVPN server, PPTP VPN server and IPSec VPN server.
 
-The project script can be installed and run in the JFFS partition of the router and the Entware environment in the USB disk.
+The project script can be deployed and run in the JFFS partition of the router and the Entware environment in the USB disk.
 
 Since the author's amdwprsct project has included all the functions of this project, in order to avoid the application running conflict, the project script can't run in the router at the same time as the author's amdwprsct project product.
 
