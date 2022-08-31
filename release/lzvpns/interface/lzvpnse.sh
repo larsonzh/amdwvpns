@@ -13,6 +13,9 @@ POLLING_TIME=5
 
 WAN0=100
 WAN1=200
+
+SYSLOG_FILE="/tmp/syslog.log"
+
 # -----------------------------------------------
 
 # END
