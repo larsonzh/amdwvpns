@@ -170,14 +170,19 @@ clear_time_task() {
 	rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
+clear_vpn_event() {
+	[ -f ${PATH_BOOTLOADER}/${VPN_EVENT_FILE} ] && \
+		sed -i "/${VPN_EVENT_INTERFACE_SCRIPTS}/d" ${PATH_BOOTLOADER}/${VPN_EVENT_FILE} > /dev/null 2>&1
+}
+
 clear_firewall_start() {
-	if [ -f ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} ]; then
-		sed -i "/"${PROJECT_ID}"/d" ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} > /dev/null 2>&1
-	fi
+	[ -f ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} ] && \
+        sed -i "/"${PROJECT_ID}"/d" ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} > /dev/null 2>&1
 }
 
 stop_run() {
     [ "${1}" != stop ] && return
+    clear_vpn_event
     clear_firewall_start
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
     echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
