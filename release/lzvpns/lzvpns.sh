@@ -4,7 +4,7 @@
 
 # LZ script for asuswrt/merlin based router
 
-# Script command:
+# Script command: (e.g., in the lzvpns Directory)
 # Start/Restart:  ./lzvpns.sh
 # Stop:           ./lzvpns.sh stop
 
@@ -54,12 +54,14 @@ WAN1=200
 # ---------------- Function area ----------------
 
 # Initialize user-defined data。
-Initialuserdata() {
+initializeuserdata() {
     [ "${WAN_ACCESS_PORT}" -lt 0 -o "${WAN_ACCESS_PORT}" -gt 1 ] && WAN_ACCESS_PORT=0
     [ "${VPN_WAN_PORT}" -lt 0 -o "${VPN_WAN_PORT}" -gt 1 ] && VPN_WAN_PORT=0
     [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 1 ] && POLLING_TIME=5
 }
 
 # --------- Script code execution area ----------
+
+initializeuserdata
 
 # END
