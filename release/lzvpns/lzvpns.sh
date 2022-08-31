@@ -13,7 +13,8 @@
 
 # BEIGIN
 
-# -------------- Custom data area ---------------
+#  ------------- User defined data --------------
+
 # The router port used by the VPN client to access the router from the WAN 
 # using the domain name or IP address。
 # 0--Primary WAN (Default), 1--Secondary WAN
@@ -28,7 +29,7 @@ VPN_WAN_PORT=0
 POLLING_TIME=5
 
 
-# ------------ global variable area -------------
+# --------------- global variable ---------------
 
 # Project ID
 PROJECT_ID=lzvpns
@@ -37,7 +38,7 @@ PROJECT_ID=lzvpns
 MAIN_SCRIPTS=${PROJECT_ID}.sh
 
 # VPN event processing script file
-VPN_EVENT_INTERFACE_SCRIPTS=lzvpns.sh
+VPN_EVENT_INTERFACE_SCRIPTS=lzvpnse.sh
 
 # VPN daemon script file
 VPN_DAEMON_SCRIPTS=lzvpnsd.sh
@@ -57,19 +58,50 @@ PATH_TMP=${PATH_LZ}/tmp
 WAN0=100
 WAN1=200
 
+# System event log file
+SYSLOG_FILE="/tmp/syslog.log"
 
-# ---------------- Function area ----------------
+# ------------------ Function -------------------
 
-# Initialize user-defined data。
-initializeuserdata() {
+cleaning_user_data() {
     [ "${WAN_ACCESS_PORT}" -lt 0 -o "${WAN_ACCESS_PORT}" -gt 1 ] && WAN_ACCESS_PORT=0
     [ "${VPN_WAN_PORT}" -lt 0 -o "${VPN_WAN_PORT}" -gt 1 ] && VPN_WAN_PORT=0
     [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 1 ] && POLLING_TIME=5
 }
 
+directory_file_management() {
+	[ ! -d ${PATH_LZ} ] && mkdir -p ${PATH_LZ} > /dev/null 2>&1
+	chmod 775 ${PATH_LZ} > /dev/null 2>&1
+	[ ! -d ${PATH_INTERFACE} ] && mkdir -p ${PATH_INTERFACE} > /dev/null 2>&1
+	chmod 775 ${PATH_INTERFACE} > /dev/null 2>&1
+	[ ! -d ${PATH_TMP} ] && mkdir -p ${PATH_TMP} > /dev/null 2>&1
+	chmod 775 ${PATH_TMP} > /dev/null 2>&1
+	cd ${PATH_INTERFACE}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+	cd ${PATH_TMP}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+	cd ${PATH_LZ}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
 
-# --------- Script code execution area ----------
+	local scripts_file_exist=0
+	[ ! -f ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} ] && {
+		echo $(date) [$$]: The file ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist.
+		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist. >> ${SYSLOG_FILE}
+		scripts_file_exist=1
+	}
+	[ ! -f ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} ] && {
+		echo $(date) [$$]: The file ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist.
+		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist. >> ${SYSLOG_FILE}
+		scripts_file_exist=1
+	}
+	if [ "$scripts_file_exist" = 1 ]; then
+		echo -e $(date) [$$]: Policy routing service can\'t be started.
+		echo -e $(date) [$$]: Policy routing service can\'t be started. >> ${SYSLOG_FILE}
+		echo $(date) [$$]: >> ${SYSLOG_FILE}
+		exit 1
+	fi
+}
 
-initializeuserdata
+# ------------ Script code execution ------------
+
+cleaning_user_data
+directory_file_management
 
 # END
