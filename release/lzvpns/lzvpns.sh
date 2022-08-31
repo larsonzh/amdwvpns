@@ -31,6 +31,8 @@ POLLING_TIME=5
 
 # --------------- global variable ---------------
 
+LZ_VERSION=v0.0.1
+
 # System event log file
 SYSLOG_FILE="/tmp/syslog.log"
 
@@ -168,6 +170,10 @@ clear_time_task() {
 	rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
+stop_run() {
+    [ "${1}" != stop ] && return
+}
+
 transfer_parameters() {
 	sed -i "s:WAN_ACCESS_PORT=.*$:WAN_ACCESS_PORT="${WAN_ACCESS_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
@@ -184,6 +190,10 @@ transfer_parameters() {
 
 # -------------- Script execution ---------------
 
+echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands start...... | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai ${SYSLOG_FILE} 2> /dev/null
+
 cleaning_user_data
 clear_daemon
 clear_time_task
@@ -195,6 +205,10 @@ clear_balance_data
 clear_ipsetS
 init_directory
 check_file
+stop_run "${1}"
 transfer_parameters
+
+echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
 
 # END
