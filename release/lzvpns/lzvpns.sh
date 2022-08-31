@@ -23,9 +23,17 @@ POLLING_TIME=5
 
 # ------------ global variable area -------------
 
+# Project file deployment path。
+PATH_BASE=/jffs/scripts
+PATH_LZ="${0%/*}"
+[ "${PATH_LZ:0:1}" != '/' ] && PATH_LZ="$( pwd )${PATH_LZ#*.}"
+PATH_INTERFACE=${PATH_LZ}/interface
+PATH_TMP=${PATH_LZ}/tmp
+
 # Router WAN port router table ID.
 WAN0=100
 WAN1=200
+
 
 # ---------------- Function area ----------------
 
