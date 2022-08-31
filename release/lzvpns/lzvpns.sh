@@ -172,8 +172,7 @@ clear_time_task() {
 
 stop_run() {
     [ "${1}" != stop ] && return
-
-	echo $(date) [$$]: Dual WAN VPN Support service has stopped.
+    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
     echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
     echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
 
