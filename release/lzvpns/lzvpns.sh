@@ -14,7 +14,7 @@ WAN_ACCESS_PORT=0
 
 # The router port used by the VPN client to access the WAN through the router.
 # 0--Primary WAN (Default), 1--Secondary WAN
-VPN_CLIENT_WAN_PORT=0
+VPN_WAN_PORT=0
 
 # Polling time to detect VPN client access.
 # 1~10s (The default is 5 seconds)
