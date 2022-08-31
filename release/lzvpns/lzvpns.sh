@@ -6,9 +6,10 @@
 
 # BEIGIN
 
-# ------ User parameter configuration area ------
+# ----------- User defined data area ------------
 
-# The router port used by the VPN client to access the router from the WAN using the domain name or IP address。
+# The router port used by the VPN client to access the router from the WAN 
+# using the domain name or IP address。
 # 0--Primary WAN (Default), 1--Secondary WAN
 WAN_ACCESS_PORT=0
 
@@ -27,6 +28,13 @@ WAN0=100
 WAN1=200
 
 # ---------------- Function area ----------------
+
+# Initialize user-defined data。
+Initialuserdata() {
+    [ "${WAN_ACCESS_PORT}" -lt 0 -o "${WAN_ACCESS_PORT}" -gt 1 ] && WAN_ACCESS_PORT=0
+    [ "${VPN_WAN_PORT}" -lt 0 -o "${VPN_WAN_PORT}" -gt 1 ] && VPN_WAN_PORT=0
+    [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 1 ] && POLLING_TIME=5
+}
 
 # --------- Script code execution area ----------
 
