@@ -6,4 +6,13 @@
 
 # BEIGIN
 
+# -------- lzvpns.sh transfer data area ---------
+WAN_ACCESS_PORT=0
+VPN_WAN_PORT=0
+POLLING_TIME=5
+
+WAN0=100
+WAN1=200
+# -----------------------------------------------
+
 # END
