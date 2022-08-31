@@ -32,7 +32,7 @@ POLLING_TIME=5
 
 # Project ID and main execution script file.
 PROJECT_ID=lzvpns
-PROJECT_FILE=${PROJECT_ID}.sh
+PROJECT_MAIN_SCRIPTS=${PROJECT_ID}.sh
 
 # Project file deployment path.
 PATH_BOOTLOADER=/jffs/scripts
@@ -44,6 +44,12 @@ PATH_TMP=${PATH_LZ}/tmp
 # Self boot and event trigger files.
 BOOTLOADER_FILE=firewall-start
 OPENVPN_EVENT_FILE=openvpn-event
+
+# VPN event processing script
+VPN_EVENT_INTERFACE_SCRIPTS=lzvpns.sh
+
+# VPN daemon script
+VPN_DAEMON_SCRIPTS=lzvpnsd.sh
 
 # Router WAN port router table ID.
 WAN0=100
