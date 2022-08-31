@@ -12,7 +12,7 @@
 # 0--Primary WAN (Default), 1--Secondary WAN
 WAN_ACCESS_PORT=0
 
-#The VPN client accesses the router exit of the WAN through the router
+# The VPN client accesses the router exit of the WAN through the router
 # 0--Primary WAN (Default), 1--Secondary WAN
 VPN_CLIENT_WAN_PORT=0
 
