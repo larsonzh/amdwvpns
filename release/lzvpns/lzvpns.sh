@@ -35,27 +35,27 @@ POLLING_TIME=5
 SYSLOG_FILE="/tmp/syslog.log"
 
 # Project ID
-PROJECT_ID=lzvpns
+PROJECT_ID="lzvpns"
 
 # main execution script file
-MAIN_SCRIPTS=${PROJECT_ID}.sh
+MAIN_SCRIPTS="${PROJECT_ID}.sh"
 
 # VPN event processing script file
-VPN_EVENT_INTERFACE_SCRIPTS=lzvpnse.sh
+VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
 
 # VPN daemon script file
-VPN_DAEMON_SCRIPTS=lzvpnsd.sh
+VPN_DAEMON_SCRIPTS="lzvpnsd.sh"
 
 # Self boot and event trigger files
-BOOTLOADER_FILE=firewall-start
-VPN_EVENT_FILE=openvpn-event
+BOOTLOADER_FILE="firewall-start"
+VPN_EVENT_FILE="openvpn-event"
 
 # Project file deployment path.
-PATH_BOOTLOADER=/jffs/scripts
+PATH_BOOTLOADER="/jffs/scripts"
 PATH_LZ="${0%/*}"
 [ "${PATH_LZ:0:1}" != '/' ] && PATH_LZ="$( pwd )${PATH_LZ#*.}"
-PATH_INTERFACE=${PATH_LZ}/interface
-PATH_TMP=${PATH_LZ}/tmp
+PATH_INTERFACE="${PATH_LZ}/interface"
+PATH_TMP="${PATH_LZ}/tmp"
 
 # Router WAN port VPN routing table ID.
 VPN_WAN0=998
@@ -66,6 +66,21 @@ IP_RULE_PRIO_HOST=999
 
 # VPN client access WAN policy routing rule priority
 IP_RULE_PRIO_VPN=998
+
+## OpenVPN subnet address list data set
+OVPN_SUBNET_IP_SET="lzvpns_openvpn_subnet"
+
+# PPTP VPN client local address list dataset
+PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
+
+# IPSec VPN subnet address list data set
+IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
+
+# VPN daemon startup script
+VPN_DAEMON_START_SCRIPT="lzvpns_start_daemon.sh"
+
+# Start VPN daemon time task ID
+START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 
 
 # ------------------ Function -------------------
@@ -105,10 +120,27 @@ check_file() {
 	fi
 }
 
+clear_ip_rules() {
+    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' | awk '{system($0" > /dev/null 2>&1")}'
+}
+
+clear_routing_table() {
+	local item=
+	for item in $( ip route list table ${1} )
+	do
+		ip route del ${item} table ${1} > /dev/null 2>&1
+	done
+	ip route flush cache > /dev/null 2>&1
+}
+
 
 # ------------ Script code execution ------------
 
 cleaning_user_data
+clear_ip_rules "${IP_RULE_PRIO_VPN}"
+clear_ip_rules "${IP_RULE_PRIO_HOST}"
+clear_routing_table "${VPN_WAN0}"
+clear_routing_table "${VPN_WAN1}"
 init_directory
 check_file
 
