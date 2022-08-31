@@ -170,20 +170,36 @@ clear_time_task() {
 	rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
-clear_vpn_event() {
-	[ -f ${PATH_BOOTLOADER}/${VPN_EVENT_FILE} ] && \
-		sed -i "/${VPN_EVENT_INTERFACE_SCRIPTS}/d" ${PATH_BOOTLOADER}/${VPN_EVENT_FILE} > /dev/null 2>&1
+clear_event_trigger_interface_file() {
+	[ -f "${PATH_BOOTLOADER}/${1}" ] && \
+        sed -i "/"${2}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
-clear_firewall_start() {
-	[ -f ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} ] && \
-        sed -i "/"${PROJECT_ID}"/d" ${PATH_BOOTLOADER}/${BOOTLOADER_FILE} > /dev/null 2>&1
+create_event_trigger_interface_file() {
+	[ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
+	if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
+		cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
+#!/bin/sh
+EOF_INTERFACE
+	fi
+	[ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
+	if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
+		sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	else
+		[ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
+            sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	fi
+	if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
+		sed -i "/"${3}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+		sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	fi
+	chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
 stop_run() {
     [ "${1}" != stop ] && return
-    clear_vpn_event
-    clear_firewall_start
+    clear_event_trigger_interface_file "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    clear_event_trigger_interface_file "$BOOTLOADER_FILE" "${PROJECT_ID}"
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
     echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
     echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
@@ -223,6 +239,8 @@ init_directory
 check_file
 stop_run "${1}"
 transfer_parameters
+create_event_trigger_interface_file "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
+create_event_trigger_interface_file "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
 
 echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
