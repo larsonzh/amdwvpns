@@ -80,6 +80,9 @@ IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 # VPN daemon startup script
 VPN_DAEMON_START_SCRIPT="lzvpns_start_daemon.sh"
 
+# VPN daemon lock
+VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
+
 # Start VPN daemon time task ID
 START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 
@@ -121,8 +124,14 @@ check_file() {
 	fi
 }
 
+clear_daemon() {
+	ipset -q destroy $VPN_DAEMON_IP_SET_LOCK
+	ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
+}
+
 clear_ip_rules() {
-    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' | awk '{system($0" > /dev/null 2>&1")}'
+    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
+                | awk '{system($0" > /dev/null 2>&1")}'
 }
 
 clear_routing_table() {
@@ -132,6 +141,31 @@ clear_routing_table() {
 		ip route del ${item} table ${1} > /dev/null 2>&1
 	done
 	ip route flush cache > /dev/null 2>&1
+}
+
+clear_balance_data() {
+	if [ -n "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ]; then
+		local local_number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
+                            | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
+                            | cut -d " " -f 1 | sort -nr )"
+		local local_item_no=
+		for local_item_no in $local_number
+		do
+			iptables -t mangle -D balance $local_item_no > /dev/null 2>&1
+		done
+	fi
+}
+
+clear_ipsetS() {
+	ipset -q destroy ${OVPN_SUBNET_IP_SET}
+	ipset -q destroy ${PPTP_CLIENT_IP_SET}
+	ipset -q destroy ${IPSEC_SUBNET_IP_SET}
+}
+
+clear_time_task() {
+	cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
+    sleep 1s
+	rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
 transfer_parameters() {
@@ -148,14 +182,18 @@ transfer_parameters() {
 	sed -i "s:SYSLOG_FILE=.*$:SYSLOG_FILE=\""${SYSLOG_FILE}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 }
 
-
 # -------------- Script execution ---------------
 
 cleaning_user_data
+clear_daemon
+clear_time_task
 clear_ip_rules "${IP_RULE_PRIO_VPN}"
 clear_ip_rules "${IP_RULE_PRIO_HOST}"
 clear_routing_table "${VPN_WAN0}"
 clear_routing_table "${VPN_WAN1}"
+clear_balance_data
+clear_ipsetS
+clear_temp_file
 init_directory
 check_file
 transfer_parameters
