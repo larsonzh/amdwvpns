@@ -14,6 +14,9 @@ VPN_WAN0=998
 VPN_WAN1=999
 IP_RULE_PRIO_HOST=999
 IP_RULE_PRIO_VPN=998
+OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
+PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
+IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 SYSLOG_FILE="/tmp/syslog.log"
 # -----------------------------------------------
 
