@@ -54,9 +54,15 @@ PATH_LZ="${0%/*}"
 PATH_INTERFACE=${PATH_LZ}/interface
 PATH_TMP=${PATH_LZ}/tmp
 
-# Router WAN port router table ID.
-WAN0=100
-WAN1=200
+# Router WAN port VPN routing table ID.
+VPN_WAN0=998
+VPN_WAN1=999
+
+## Router host access WAN policy routing rule priority
+IP_RULE_PRIO_HOST=999
+
+# VPN client access WAN policy routing rule priority
+IP_RULE_PRIO_VPN=998
 
 # System event log file
 SYSLOG_FILE="/tmp/syslog.log"
