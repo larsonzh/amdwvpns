@@ -10,10 +10,10 @@
 WAN_ACCESS_PORT=0
 VPN_WAN_PORT=0
 POLLING_TIME=5
-
-WAN0=100
-WAN1=200
-
+VPN_WAN0=998
+VPN_WAN1=999
+IP_RULE_PRIO_HOST=999
+IP_RULE_PRIO_VPN=998
 SYSLOG_FILE="/tmp/syslog.log"
 # -----------------------------------------------
 
