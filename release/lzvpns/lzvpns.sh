@@ -172,6 +172,12 @@ clear_time_task() {
 
 stop_run() {
     [ "${1}" != stop ] && return
+
+	echo $(date) [$$]: Dual WAN VPN Support service has stopped.
+    echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
+    echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
+
+    exit 0
 }
 
 transfer_parameters() {
@@ -192,7 +198,7 @@ transfer_parameters() {
 
 echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands start...... | tee -ai ${SYSLOG_FILE} 2> /dev/null
-echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo -e $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai ${SYSLOG_FILE} 2> /dev/null
 
 cleaning_user_data
 clear_daemon
@@ -210,5 +216,7 @@ transfer_parameters
 
 echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
+
+exit 0
 
 # END
