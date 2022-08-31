@@ -21,14 +21,23 @@ VPN_WAN_PORT=0
 # 1~10s (The default is 5 seconds)
 POLLING_TIME=5
 
+
 # ------------ global variable area -------------
 
-# Project file deployment path。
-PATH_BASE=/jffs/scripts
+# Project file deployment path.
+PATH_BOOTLOADER=/jffs/scripts
 PATH_LZ="${0%/*}"
 [ "${PATH_LZ:0:1}" != '/' ] && PATH_LZ="$( pwd )${PATH_LZ#*.}"
 PATH_INTERFACE=${PATH_LZ}/interface
 PATH_TMP=${PATH_LZ}/tmp
+
+# Self boot and event trigger files.
+BOOTLOADER_FILE=firewall-start
+OPENVPN_EVENT_FILE=openvpn-event
+
+# Project ID and main execution script file.
+PROJECT_ID=lzvpns
+PROJECT_FILE=${PROJECT_ID}.sh
 
 # Router WAN port router table ID.
 WAN0=100
