@@ -70,7 +70,7 @@ cleaning_user_data() {
     [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 10 ] && POLLING_TIME=5
 }
 
-directory_file_management() {
+init_directory() {
 	[ ! -d ${PATH_LZ} ] && mkdir -p ${PATH_LZ} > /dev/null 2>&1
 	chmod 775 ${PATH_LZ} > /dev/null 2>&1
 	[ ! -d ${PATH_INTERFACE} ] && mkdir -p ${PATH_INTERFACE} > /dev/null 2>&1
@@ -80,7 +80,9 @@ directory_file_management() {
 	cd ${PATH_INTERFACE}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
 	cd ${PATH_TMP}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
 	cd ${PATH_LZ}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+}
 
+check_file() {
 	local scripts_file_exist=0
 	[ ! -f ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} ] && {
 		echo $(date) [$$]: The file ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist.
@@ -93,8 +95,8 @@ directory_file_management() {
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
-		echo -e $(date) [$$]: Policy routing service can\'t be started.
-		echo -e $(date) [$$]: Policy routing service can\'t be started. >> ${SYSLOG_FILE}
+		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started.
+		echo -e $(date) [$$]: Dual WAN VPN support can\'t be started. >> ${SYSLOG_FILE}
 		echo $(date) [$$]: >> ${SYSLOG_FILE}
 		exit 1
 	fi
@@ -104,6 +106,7 @@ directory_file_management() {
 # ------------ Script code execution ------------
 
 cleaning_user_data
-directory_file_management
+init_directory
+check_file
 
 # END
