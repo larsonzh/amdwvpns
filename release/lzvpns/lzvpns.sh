@@ -22,6 +22,10 @@ POLLING_TIME=5
 
 # ------------ global variable area -------------
 
+# Router WAN port router table ID.
+WAN0=100
+WAN1=200
+
 # ---------------- Function area ----------------
 
 # --------- Script code execution area ----------
