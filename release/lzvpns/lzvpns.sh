@@ -85,18 +85,18 @@ init_directory() {
 check_file() {
 	local scripts_file_exist=0
 	[ ! -f ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} ] && {
-		echo $(date) [$$]: The file ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist.
+		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist.
 		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist. >> ${SYSLOG_FILE}
 		scripts_file_exist=1
 	}
 	[ ! -f ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} ] && {
-		echo $(date) [$$]: The file ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist.
+		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist.
 		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_DAEMON_SCRIPTS} does not exist. >> ${SYSLOG_FILE}
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
 		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started.
-		echo -e $(date) [$$]: Dual WAN VPN support can\'t be started. >> ${SYSLOG_FILE}
+		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started. >> ${SYSLOG_FILE}
 		echo $(date) [$$]: >> ${SYSLOG_FILE}
 		exit 1
 	fi
