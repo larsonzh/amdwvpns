@@ -193,7 +193,6 @@ clear_routing_table "${VPN_WAN0}"
 clear_routing_table "${VPN_WAN1}"
 clear_balance_data
 clear_ipsetS
-clear_temp_file
 init_directory
 check_file
 transfer_parameters
