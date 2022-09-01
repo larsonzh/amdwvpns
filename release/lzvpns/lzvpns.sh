@@ -109,16 +109,16 @@ init_directory() {
 
 check_file() {
 	local scripts_file_exist=0
-	[ ! -f ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} ] && {
-		echo $(date) [$$]: ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} does not exist. | tee -ai ${SYSLOG_FILE} 2> /dev/null
+	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
+		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 		scripts_file_exist=1
 	}
-	[ ! -f ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ] && {
-		echo $(date) [$$]: ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} does not exist. | tee -ai ${SYSLOG_FILE} 2> /dev/null
+	[ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
+		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
-		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai ${SYSLOG_FILE} 2> /dev/null
+		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 		return 1
 	fi
     return 0
@@ -193,13 +193,12 @@ EOF_INTERFACE
 stop_run() {
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
+    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
     return 0
 }
 
 transfer_parameters() {
 	sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
-	sed -i "s:POLLING_TIME=.*$:POLLING_TIME="${POLLING_TIME}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:WAN0=.*$:WAN0="${WAN0}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:WAN1=.*$:WAN1="${WAN1}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:IP_RULE_PRIO_VPN=.*$:IP_RULE_PRIO_VPN="${IP_RULE_PRIO_VPN}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
@@ -218,16 +217,24 @@ set_wan_access_port() {
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
 }
 
-start_service() {
+start_daemon() {
+	if [ -n "$( which nohup 2> /dev/null )" ] && \
+		[ "$( nvram get pptpd_enable )" = "1" -o "$( nvram get ipsec_server_enable)" = "1" ]; then
+		nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+    fi
+}
 
+start_service() {
+    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+    start_daemon
 }
 
 
 # -------------- Script execution ---------------
 
-echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
-echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands start...... | tee -ai ${SYSLOG_FILE} 2> /dev/null
-echo -e $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo $(date) [$$]: | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo -e $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 
 while ture
 do
@@ -251,8 +258,8 @@ do
     break
 done
 
-echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
-echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
+echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo $(date) [$$]: | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 
 exit 0
 
