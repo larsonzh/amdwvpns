@@ -217,10 +217,7 @@ set_wan_access_port() {
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
 }
 
-start_daemon() {
-    [ -z "$( which nohup 2> /dev/null )" ] && return
-    [ "$( nvram get pptpd_enable )" != "1" -a "$( nvram get ipsec_server_enable)" != "1" ] && return
-    nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+craeate_daemon_start_scripts() {
     cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" <<EOF_START_DAEMON_SCRIPT
 # ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
 # By LZ (larsonzhang@gmail.com)
@@ -248,6 +245,14 @@ flock -u $LOCK_FILE_ID > /dev/null 2>&1
 
 EOF_START_DAEMON_SCRIPT
     chmod +x "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+}
+
+start_daemon() {
+    [ -z "$( which nohup 2> /dev/null )" ] && return
+    [ "$( nvram get pptpd_enable )" != "1" -a "$( nvram get ipsec_server_enable)" != "1" ] && return
+    nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+ 
+    craeate_daemon_start_scripts
 
     [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
