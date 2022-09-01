@@ -254,6 +254,7 @@ EOF_START_DAEMON_SCRIPT
 }
 
 start_service() {
+    set_wan_access_port
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     start_daemon
 }
@@ -280,7 +281,6 @@ do
     check_file || break
     [ "${1}" = "stop" ] && stop_run && break
     transfer_parameters
-    set_wan_access_port
     start_service
     create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
     create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
