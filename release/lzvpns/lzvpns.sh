@@ -213,7 +213,7 @@ transfer_parameters() {
 }
 
 set_wan_access_port() {
-	[ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
+    [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
     local router_local_ip="$( ifconfig br0 | grep "inet addr:" | awk -F: '{print $2}' | awk '{print $1}' 2> /dev/null )"
     local access_wan=${WAN0}
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
