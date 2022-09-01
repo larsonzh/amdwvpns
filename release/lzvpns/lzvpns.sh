@@ -214,8 +214,7 @@ transfer_parameters() {
 	sed -i "s:SYSLOG_FILE=.*$:SYSLOG_FILE=\""${SYSLOG_FILE}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 }
 
-start_service() {
-
+set_Wan_access_port() {
 	if [ "${WAN_ACCESS_PORT}" = "0" -o "{$WAN_ACCESS_PORT}" = "1" ]; then
 		local access_wan=${WAN0}
         [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
@@ -223,6 +222,10 @@ start_service() {
         ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
         ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
 	fi
+}
+
+start_service() {
+
 }
 
 
@@ -247,6 +250,7 @@ do
     check_file || break
     [ "${1}" = "stop" ] && stop_run && break
     transfer_parameters
+    set_Wan_access_port
     start_service
     create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
     create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
