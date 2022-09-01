@@ -212,7 +212,7 @@ transfer_parameters() {
 	sed -i "s:SYSLOG_FILE=.*$:SYSLOG_FILE=\""${SYSLOG_FILE}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 }
 
-set_Wan_access_port() {
+enable_wan_access_port() {
 	if [ "${WAN_ACCESS_PORT}" = "0" -o "{$WAN_ACCESS_PORT}" = "1" ]; then
 		local access_wan=${WAN0}
         [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
@@ -248,7 +248,7 @@ do
     check_file || break
     [ "${1}" = "stop" ] && stop_run && break
     transfer_parameters
-    set_Wan_access_port
+    enable_wan_access_port
     start_service
     create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
     create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
