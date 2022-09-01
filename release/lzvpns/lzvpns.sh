@@ -87,6 +87,9 @@ VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 # Start VPN daemon time task ID
 START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 
+HARDWARE_TYPE=$( uname -m )
+MATCH_SET='--match-set'
+
 
 # ------------------ Function -------------------
 
@@ -224,29 +227,27 @@ create_vpn_ipsets() {
 }
 
 get_match_set() {
-    local match_set='--match-set'
-    local route_hardware_type=$( uname -m )
-	case ${route_hardware_type} in
+	case ${HARDWARE_TYPE} in
 		armv7l)
-			match_set='--match-set'
+			MATCH_SET='--match-set'
 		;;
 		mips)
-			match_set='--set'
+			MATCH_SET='--set'
 		;;
 		aarch64)
-			match_set='--match-set'
+			MATCH_SET='--match-set'
 		;;
 		*)
-			match_set='--match-set'
+			MATCH_SET='--match-set'
 		;;
 	esac
-    echo "${match_set}"
+    echo "${MATCH_SET}"
 }
 
 set_balance_chain() {
 	[ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
     create_vpn_ipsets
-    MATCH_SET="$( get_match_set )"
+    get_match_set
 	iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
 	iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" dst -j RETURN > /dev/null 2>&1
 	iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
@@ -255,7 +256,6 @@ set_balance_chain() {
         iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" src -j RETURN > /dev/null 2>&1
         iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
     fi
-    unset MATCH_SET
 }
 
 craeate_daemon_start_scripts() {
