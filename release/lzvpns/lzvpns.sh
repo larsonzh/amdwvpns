@@ -217,6 +217,47 @@ set_wan_access_port() {
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
 }
 
+create_vpn_ipsets() {
+    ipset -! create "${OVPN_SUBNET_IP_SET}" nethash; ipset -q flush "${OVPN_SUBNET_IP_SET}";
+    ipset -! create "${PPTP_CLIENT_IP_SET}" nethash; ipset -q flush "${PPTP_CLIENT_IP_SET}";
+    ipset -! create "${IPSEC_SUBNET_IP_SET}" nethash; ipset -q flush "${IPSEC_SUBNET_IP_SET}";
+}
+
+get_match_set() {
+    local match_set='--match-set'
+    local route_hardware_type=$( uname -m )
+	case ${route_hardware_type} in
+		armv7l)
+			match_set='--match-set'
+		;;
+		mips)
+			match_set='--set'
+		;;
+		aarch64)
+			match_set='--match-set'
+		;;
+		*)
+			match_set='--match-set'
+		;;
+	esac
+    echo "${match_set}"
+}
+
+set_balance_chain() {
+	[ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
+    create_vpn_ipsets
+    MATCH_SET="$( get_match_set )"
+	iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
+	iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" dst -j RETURN > /dev/null 2>&1
+	iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
+    if [ "${VPN_WAN_PORT}" = 0 -o "${VPN_WAN_PORT}" = 1 ]; then
+        iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
+        iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" src -j RETURN > /dev/null 2>&1
+        iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
+    fi
+    unset MATCH_SET
+}
+
 craeate_daemon_start_scripts() {
     cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" <<EOF_START_DAEMON_SCRIPT
 # ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
@@ -251,12 +292,9 @@ start_daemon() {
     [ -z "$( which nohup 2> /dev/null )" ] && return
     [ "$( nvram get pptpd_enable )" != "1" -a "$( nvram get ipsec_server_enable)" != "1" ] && return
     nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
- 
     craeate_daemon_start_scripts
-
     [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
-
 	if [ -n "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
 		echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 		echo $(date) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
@@ -267,9 +305,12 @@ start_daemon() {
 }
 
 start_service() {
+ 	[ -z "$( ip route list| grep nexthop )" ] && return 1
     set_wan_access_port
+    set_balance_chain
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     start_daemon
+    return 0
 }
 
 
