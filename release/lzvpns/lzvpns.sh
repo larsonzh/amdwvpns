@@ -218,10 +218,39 @@ set_wan_access_port() {
 }
 
 start_daemon() {
-    if [ -n "$( which nohup 2> /dev/null )" ] && \
-        [ "$( nvram get pptpd_enable )" = "1" -o "$( nvram get ipsec_server_enable)" = "1" ]; then
-        nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
-    fi
+    [ -z "$( which nohup 2> /dev/null )" ] && return
+    [ "$( nvram get pptpd_enable )" != "1" -a "$( nvram get ipsec_server_enable)" != "1" ] && return
+    nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+    cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" <<EOF_START_DAEMON_SCRIPT
+# ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
+# By LZ (larsonzhang@gmail.com)
+# Do not manually modify!!!
+
+[ ! -d ${PATH_LOCK} ] && { mkdir -p ${PATH_LOCK} > /dev/null 2>&1; chmod 777 ${PATH_LOCK} > /dev/null 2>&1; }
+exec $LOCK_FILE_ID<>${LOCK_FILE}; flock -x $LOCK_FILE_ID > /dev/null 2>&1;
+
+ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
+ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
+nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+sleep 1s
+if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
+	cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
+	sleep 1s
+	rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: The VPN client route daemon has been started again. >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: -------- LZ $LZ_VERSION VPN Client Daemon ---------- >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
+fi
+
+flock -u $LOCK_FILE_ID > /dev/null 2>&1
+
+EOF_START_DAEMON_SCRIPT
+    chmod +x "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+
+    [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
+        && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 }
 
 start_service() {
