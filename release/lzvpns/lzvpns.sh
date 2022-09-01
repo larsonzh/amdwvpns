@@ -239,8 +239,8 @@ if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
 	rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
 	echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: The VPN client route daemon has been started again. >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: -------- LZ $LZ_VERSION VPN Client Daemon ---------- >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG_FILE}" 2> /dev/null
 	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
 fi
 
@@ -251,6 +251,14 @@ EOF_START_DAEMON_SCRIPT
 
     [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+
+	if [ -n "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
+		echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+	elif [ -n "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ]; then
+		echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+	fi
 }
 
 start_service() {
