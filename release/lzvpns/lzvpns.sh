@@ -138,9 +138,9 @@ clear_ip_rules() {
 
 clear_routing_table() {
 	local item=
-	for item in $( ip route list table ${1} )
+	for item in $( ip route list table "${1}" )
 	do
-		ip route del ${item} table ${1} > /dev/null 2>&1
+		ip route del "${item}" table "${1}" > /dev/null 2>&1
 	done
 	ip route flush cache > /dev/null 2>&1
 }
@@ -153,15 +153,15 @@ clear_balance_data() {
 		local local_item_no=
 		for local_item_no in $local_number
 		do
-			iptables -t mangle -D balance $local_item_no > /dev/null 2>&1
+			iptables -t mangle -D balance "$local_item_no" > /dev/null 2>&1
 		done
 	fi
 }
 
 clear_ipsetS() {
-	ipset -q destroy ${OVPN_SUBNET_IP_SET}
-	ipset -q destroy ${PPTP_CLIENT_IP_SET}
-	ipset -q destroy ${IPSEC_SUBNET_IP_SET}
+	ipset -q flush "${OVPN_SUBNET_IP_SET}" && ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+	ipset -q flush "${PPTP_CLIENT_IP_SET}" && ipset -q destroy "${PPTP_CLIENT_IP_SET}"
+	ipset -q flush "${IPSEC_SUBNET_IP_SET}" && ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
 }
 
 clear_time_task() {
