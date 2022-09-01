@@ -218,9 +218,9 @@ set_wan_access_port() {
 }
 
 start_daemon() {
-	if [ -n "$( which nohup 2> /dev/null )" ] && \
-		[ "$( nvram get pptpd_enable )" = "1" -o "$( nvram get ipsec_server_enable)" = "1" ]; then
-		nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+    if [ -n "$( which nohup 2> /dev/null )" ] && \
+        [ "$( nvram get pptpd_enable )" = "1" -o "$( nvram get ipsec_server_enable)" = "1" ]; then
+        nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
     fi
 }
 
