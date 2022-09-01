@@ -159,9 +159,9 @@ clear_ipsetS() {
 }
 
 clear_time_task() {
-	cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
+    cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
     sleep 1s
-	rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
+    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
 clear_event_interface() {
