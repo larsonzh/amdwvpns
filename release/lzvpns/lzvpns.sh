@@ -218,10 +218,10 @@ start_service() {
 
 	if [ "${WAN_ACCESS_PORT}" = "0" -o "{$WAN_ACCESS_PORT}" = "1" ]; then
 		local access_wan=${WAN0}
-		[ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
+        [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
         local router_local_ip="$( ifconfig br0 | grep "inet addr:" | awk -F: '{print $2}' | awk '{print $1}' 2> /dev/null )"
-		ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
-		ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+        ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+        ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
 	fi
 }
 
