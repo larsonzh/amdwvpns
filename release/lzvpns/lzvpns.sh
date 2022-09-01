@@ -245,7 +245,7 @@ get_match_set() {
 }
 
 set_balance_chain() {
-	[ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
+    [ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
     create_vpn_ipsets
     get_match_set
 	iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
