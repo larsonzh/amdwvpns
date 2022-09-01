@@ -197,7 +197,6 @@ EOF_INTERFACE
 }
 
 stop_run() {
-    [ "${1}" != stop ] && return
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
@@ -237,8 +236,9 @@ clear_balance_data
 clear_ipsetS
 init_directory
 check_file
-stop_run "${1}"
+[ "${1}" = "stop" ] && stop_run
 transfer_parameters
+
 create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
 create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
 
