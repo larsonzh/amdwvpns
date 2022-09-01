@@ -61,8 +61,7 @@ PATH_DAEMON="${PATH_LZ}/daemon"
 PATH_TMP="${PATH_LZ}/tmp"
 
 # Router WAN port routing table ID
-WAN0=100
-WAN1=200
+WAN0=100; WAN1=200;
 
 ## Router host access WAN policy routing rule priority
 IP_RULE_PRIO_HOST=999
@@ -132,7 +131,7 @@ clear_daemon() {
 
 delte_ip_rules() {
     ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
-                | awk '{system($0" > /dev/null 2>&1")}'
+         | awk '{system($0" > /dev/null 2>&1")}'
 }
 
 restore_routing_table() {
@@ -142,16 +141,15 @@ restore_routing_table() {
 }
 
 restore_balance_chain() {
-	if [ -n "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ]; then
-		local local_number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
-                            | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
-                            | cut -d " " -f 1 | sort -nr )"
-		local local_item_no=
-		for local_item_no in $local_number
-		do
-			iptables -t mangle -D balance "$local_item_no" > /dev/null 2>&1
-		done
-	fi
+	[ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
+    local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
+                        | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
+                        | cut -d " " -f 1 | sort -nr )"
+    local item_no=
+    for item_no in ${number}
+    do
+        iptables -t mangle -D balance "${item_no}" > /dev/null 2>&1
+    done
 }
 
 clear_ipsetS() {
