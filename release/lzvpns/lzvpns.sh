@@ -60,9 +60,9 @@ PATH_INTERFACE="${PATH_LZ}/interface"
 PATH_DAEMON="${PATH_LZ}/daemon"
 PATH_TMP="${PATH_LZ}/tmp"
 
-# Router WAN port VPN routing table ID.
-VPN_WAN0=998
-VPN_WAN1=999
+# Router WAN port routing table ID.
+WAN0=100
+WAN1=200
 
 ## Router host access WAN policy routing rule priority
 IP_RULE_PRIO_HOST=999
@@ -136,16 +136,13 @@ clear_ip_rules() {
                 | awk '{system($0" > /dev/null 2>&1")}'
 }
 
-clear_routing_table() {
-	local item=
-	for item in $( ip route list table "${1}" )
-	do
-		ip route del "${item}" table "${1}" > /dev/null 2>&1
-	done
-	ip route flush cache > /dev/null 2>&1
+restore_routing_table() {
+    ip route list table "${1}" | grep -E 'pptp|tap|tun' \
+        | awk '{print "ip route del "$0"'" table ${1}"'"}  END{print "ip route flush cache"}' \
+        | awk '{system($0" > /dev/null 2>&1")}'
 }
 
-clear_balance_data() {
+restore_balance_data() {
 	if [ -n "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ]; then
 		local local_number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
                             | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
@@ -209,8 +206,8 @@ transfer_parameters() {
 	sed -i "s:WAN_ACCESS_PORT=.*$:WAN_ACCESS_PORT="${WAN_ACCESS_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:POLLING_TIME=.*$:POLLING_TIME="${POLLING_TIME}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
-	sed -i "s:VPN_WAN0=.*$:VPN_WAN0="${VPN_WAN0}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
-	sed -i "s:VPN_WAN1=.*$:VPN_WAN1="${VPN_WAN1}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:WAN0=.*$:WAN0="${WAN0}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+	sed -i "s:WAN1=.*$:WAN1="${WAN1}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:IP_RULE_PRIO_HOST=.*$:IP_RULE_PRIO_HOST="${IP_RULE_PRIO_HOST}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:IP_RULE_PRIO_VPN=.*$:IP_RULE_PRIO_VPN="${IP_RULE_PRIO_VPN}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:OVPN_SUBNET_IP_SET=.*$:OVPN_SUBNET_IP_SET=\""${OVPN_SUBNET_IP_SET}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
@@ -218,6 +215,18 @@ transfer_parameters() {
 	sed -i "s:IPSEC_SUBNET_IP_SET=.*$:IPSEC_SUBNET_IP_SET=\""${IPSEC_SUBNET_IP_SET}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 	sed -i "s:SYSLOG_FILE=.*$:SYSLOG_FILE=\""${SYSLOG_FILE}"\":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 }
+
+start_service() {
+
+	if [ "${WAN_ACCESS_PORT}" = "0" -o "{$WAN_ACCESS_PORT}" = "1" ]; then
+		local access_wan=${WAN0}
+		[ "${WAN_ACCESS_PORT}" = "1" ] && access_wan=${WAN1}
+        local router_local_ip="$( ifconfig br0 | grep "inet addr:" | awk -F: '{print $2}' | awk '{print $1}' 2> /dev/null )"
+		ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+		ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+	fi
+}
+
 
 # -------------- Script execution ---------------
 
@@ -230,15 +239,15 @@ clear_daemon
 clear_time_task
 clear_ip_rules "${IP_RULE_PRIO_VPN}"
 clear_ip_rules "${IP_RULE_PRIO_HOST}"
-clear_routing_table "${VPN_WAN0}"
-clear_routing_table "${VPN_WAN1}"
-clear_balance_data
+restore_routing_table "${VPN_WAN0}"
+restore_routing_table "${VPN_WAN1}"
+restore_balance_data
 clear_ipsetS
 init_directory
 check_file
 [ "${1}" = "stop" ] && stop_run
 transfer_parameters
-
+start_service
 create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
 create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
 
