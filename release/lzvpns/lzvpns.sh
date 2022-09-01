@@ -131,7 +131,7 @@ clear_daemon() {
 	ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
 }
 
-restore_ip_rules() {
+delte_ip_rules() {
     ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
                 | awk '{system($0" > /dev/null 2>&1")}'
 }
@@ -237,8 +237,8 @@ do
     cleaning_user_data
     clear_daemon
     clear_time_task
-    restore_ip_rules "${IP_RULE_PRIO_VPN}"
-    restore_ip_rules "${IP_RULE_PRIO_HOST}"
+    delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    delte_ip_rules "${IP_RULE_PRIO_HOST}"
     restore_routing_table "${WAN0}"
     restore_routing_table "${WAN1}"
     restore_balance_chain
