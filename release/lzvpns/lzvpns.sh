@@ -52,7 +52,7 @@ VPN_DAEMON_SCRIPTS="lzvpnsd.sh"
 BOOTLOADER_FILE="firewall-start"
 VPN_EVENT_FILE="openvpn-event"
 
-# Project file deployment path.
+# Project file deployment path
 PATH_BOOTLOADER="/jffs/scripts"
 PATH_LZ="${0%/*}"
 [ "${PATH_LZ:0:1}" != '/' ] && PATH_LZ="$( pwd )${PATH_LZ#*.}"
@@ -60,7 +60,7 @@ PATH_INTERFACE="${PATH_LZ}/interface"
 PATH_DAEMON="${PATH_LZ}/daemon"
 PATH_TMP="${PATH_LZ}/tmp"
 
-# Router WAN port routing table ID.
+# Router WAN port routing table ID
 WAN0=100
 WAN1=200
 
