@@ -121,9 +121,9 @@ check_file() {
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
 		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai ${SYSLOG_FILE} 2> /dev/null
-		echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
-		exit 1
+		return 1
 	fi
+    return 0
 }
 
 clear_daemon() {
@@ -131,7 +131,7 @@ clear_daemon() {
 	ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
 }
 
-clear_ip_rules() {
+restore_ip_rules() {
     ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
                 | awk '{system($0" > /dev/null 2>&1")}'
 }
@@ -142,7 +142,7 @@ restore_routing_table() {
         | awk '{system($0" > /dev/null 2>&1")}'
 }
 
-restore_balance_data() {
+restore_balance_chain() {
 	if [ -n "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ]; then
 		local local_number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
                             | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
@@ -197,9 +197,7 @@ stop_run() {
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai ${SYSLOG_FILE} 2> /dev/null
-    echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
-    echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
-    exit 0
+    return 0
 }
 
 transfer_parameters() {
@@ -234,22 +232,26 @@ echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands start...... | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo -e $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai ${SYSLOG_FILE} 2> /dev/null
 
-cleaning_user_data
-clear_daemon
-clear_time_task
-clear_ip_rules "${IP_RULE_PRIO_VPN}"
-clear_ip_rules "${IP_RULE_PRIO_HOST}"
-restore_routing_table "${VPN_WAN0}"
-restore_routing_table "${VPN_WAN1}"
-restore_balance_data
-clear_ipsetS
-init_directory
-check_file
-[ "${1}" = "stop" ] && stop_run
-transfer_parameters
-start_service
-create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
-create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+while ture
+do
+    cleaning_user_data
+    clear_daemon
+    clear_time_task
+    restore_ip_rules "${IP_RULE_PRIO_VPN}"
+    restore_ip_rules "${IP_RULE_PRIO_HOST}"
+    restore_routing_table "${WAN0}"
+    restore_routing_table "${WAN1}"
+    restore_balance_chain
+    clear_ipsetS
+    init_directory
+    check_file || break
+    [ "${1}" = "stop" ] && stop_run && break
+    transfer_parameters
+    start_service
+    create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
+    create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    break
+done
 
 echo $(date) [$$]: LZ ${LZ_VERSION} vpns script commands executed! | tee -ai ${SYSLOG_FILE} 2> /dev/null
 echo $(date) [$$]: | tee -ai ${SYSLOG_FILE} 2> /dev/null
