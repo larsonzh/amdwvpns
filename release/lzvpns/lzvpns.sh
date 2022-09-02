@@ -258,7 +258,7 @@ stop_run() {
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled script boot event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    [ "${1}" != "1" ] && echo $(date) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
@@ -399,6 +399,13 @@ EOF_INTERFACE
     chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
+register_event_interface() {
+    create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Registration script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+}
+
 
 # -------------- Script execution ---------------
 
@@ -420,8 +427,7 @@ do
     [ "${1}" = "stop" ] && stop_run && break
     transfer_parameters
     start_service
-    create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
-    create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    register_event_interface
     break
 done
 
