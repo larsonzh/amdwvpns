@@ -146,9 +146,11 @@ delte_ip_rules() {
 
 restore_sub_routing_table() {
     local buffer="$( ip route list table "${1}" | grep -E 'pptp|tap|tun' )"
+    [ -z "$( echo "${buffer}" )" ] && return 1
     echo "${buffer}"  \
         | awk '{print "ip route del "$0"'" table ${1}"'"}  END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
+    return 0
 }
 
 restore_routing_table() {
