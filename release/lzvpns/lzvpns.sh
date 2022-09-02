@@ -13,7 +13,7 @@
 
 # BEIGIN
 
-#  ------------- User defined data --------------
+#  ------------- User Defined Data --------------
 
 # The router port used by the VPN client to access the router from the WAN 
 # using the domain name or IP address。
@@ -29,7 +29,7 @@ VPN_WAN_PORT=0
 POLLING_TIME=5
 
 
-# --------------- global variable ---------------
+# --------------- Global Variable ---------------
 
 LZ_VERSION=v0.0.1
 
@@ -422,7 +422,7 @@ start_service() {
 }
 
 
-# -------------- Script execution ---------------
+# -------------- Script Execution ---------------
 
 echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
