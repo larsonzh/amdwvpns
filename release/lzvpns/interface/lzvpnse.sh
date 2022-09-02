@@ -18,6 +18,6 @@ IP_RULE_PRIO_VPN=998
 OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
-SYSLOG_FILE="/tmp/syslog.log"
+SYSLOG="/tmp/syslog.log"
 
 # END
