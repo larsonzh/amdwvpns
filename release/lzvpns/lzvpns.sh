@@ -98,38 +98,15 @@ cleaning_user_data() {
     [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 10 ] && POLLING_TIME=5
 }
 
-init_directory() {
-	[ ! -d ${PATH_LZ} ] && mkdir -p ${PATH_LZ} > /dev/null 2>&1
-	chmod 775 ${PATH_LZ} > /dev/null 2>&1
-	[ ! -d ${PATH_INTERFACE} ] && mkdir -p ${PATH_INTERFACE} > /dev/null 2>&1
-	chmod 775 ${PATH_INTERFACE} > /dev/null 2>&1
-	[ ! -d ${PATH_TMP} ] && mkdir -p ${PATH_TMP} > /dev/null 2>&1
-	chmod 775 ${PATH_TMP} > /dev/null 2>&1
-	cd ${PATH_INTERFACE}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
-	cd ${PATH_TMP}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
-	cd ${PATH_LZ}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
-}
-
-check_file() {
-	local scripts_file_exist=0
-	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-		scripts_file_exist=1
-	}
-	[ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-		scripts_file_exist=1
-	}
-	if [ "$scripts_file_exist" = 1 ]; then
-		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-		return 1
-	fi
-    return 0
-}
-
 clear_daemon() {
 	ipset -q destroy $VPN_DAEMON_IP_SET_LOCK
 	ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
+}
+
+clear_time_task() {
+    cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
+    sleep 1s
+    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
 }
 
 delte_ip_rules() {
@@ -155,16 +132,22 @@ restore_balance_chain() {
     done
 }
 
-clear_ipsetS() {
+clear_ipsets() {
 	ipset -q flush "${OVPN_SUBNET_IP_SET}" && ipset -q destroy "${OVPN_SUBNET_IP_SET}"
 	ipset -q flush "${PPTP_CLIENT_IP_SET}" && ipset -q destroy "${PPTP_CLIENT_IP_SET}"
 	ipset -q flush "${IPSEC_SUBNET_IP_SET}" && ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
 }
 
-clear_time_task() {
-    cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
-    sleep 1s
-    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
+init_directory() {
+	[ ! -d ${PATH_LZ} ] && mkdir -p ${PATH_LZ} > /dev/null 2>&1
+	chmod 775 ${PATH_LZ} > /dev/null 2>&1
+	[ ! -d ${PATH_INTERFACE} ] && mkdir -p ${PATH_INTERFACE} > /dev/null 2>&1
+	chmod 775 ${PATH_INTERFACE} > /dev/null 2>&1
+	[ ! -d ${PATH_TMP} ] && mkdir -p ${PATH_TMP} > /dev/null 2>&1
+	chmod 775 ${PATH_TMP} > /dev/null 2>&1
+	cd ${PATH_INTERFACE}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+	cd ${PATH_TMP}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+	cd ${PATH_LZ}/ > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
 }
 
 clear_event_interface() {
@@ -172,25 +155,23 @@ clear_event_interface() {
         sed -i "/"${2}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
-create_event_interface() {
-	[ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
-	if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
-		cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
-#!/bin/sh
-EOF_INTERFACE
+check_file() {
+	local scripts_file_exist=0
+	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
+		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		scripts_file_exist=1
+	}
+	[ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
+		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		scripts_file_exist=1
+	}
+	if [ "$scripts_file_exist" = 1 ]; then
+        clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+        clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
+		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		return 1
 	fi
-	[ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
-	if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
-		sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	else
-		[ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
-            sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	fi
-	if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
-		sed -i "/"${3}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-		sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	fi
-	chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    return 0
 }
 
 stop_run() {
@@ -310,6 +291,27 @@ start_service() {
     return 0
 }
 
+create_event_interface() {
+	[ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
+	if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
+		cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
+#!/bin/sh
+EOF_INTERFACE
+	fi
+	[ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
+	if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
+		sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	else
+		[ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
+            sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	fi
+	if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
+		sed -i "/"${3}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+		sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+	fi
+	chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+}
+
 
 # -------------- Script execution ---------------
 
@@ -327,7 +329,7 @@ do
     restore_routing_table "${WAN0}"
     restore_routing_table "${WAN1}"
     restore_balance_chain
-    clear_ipsetS
+    clear_ipsets
     init_directory
     check_file || break
     [ "${1}" = "stop" ] && stop_run && break
