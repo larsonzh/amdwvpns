@@ -34,7 +34,7 @@ POLLING_TIME=5
 LZ_VERSION=v0.0.1
 
 # System event log file
-SYSLOG_FILE="/tmp/syslog.log"
+SYSLOG="/tmp/syslog.log"
 
 # Project ID
 PROJECT_ID="lzvpns"
@@ -98,14 +98,14 @@ cleaning_user_data() {
         local str="Primary WAN *"
         [ "${WAN_ACCESS_PORT}" = "0" ] && str="Primary WAN"
         [ "${WAN_ACCESS_PORT}" = "1" ] && str="Secondary WAN"
-        echo $(date) [$$]: WAN Access Port: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        echo $(date) [$$]: WAN Access Port: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
         str="System Allocation"
         [ "${VPN_WAN_PORT}" = "0" ] && str="Primary WAN"
         [ "${VPN_WAN_PORT}" = "1" ] && str="Secondary WAN"
-        echo $(date) [$$]: VPN WAN Port: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        echo $(date) [$$]: VPN WAN Port: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
         str="5s"
         [ "${POLLING_TIME}" -ge "0" -a "${POLLING_TIME}" -le "10" ] && srt="${POLLING_TIME}s"
-        echo $(date) [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        echo $(date) [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
     }
     [ "${WAN_ACCESS_PORT}" -lt "0" -o "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT=0
     [ "${POLLING_TIME}" -lt "0" -o "${POLLING_TIME}" -gt "10" ] && POLLING_TIME=5
@@ -113,12 +113,12 @@ cleaning_user_data() {
 
 clear_daemon() {
     [ -z "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" -a -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
-        [ "${1}" != "1" ] && echo $(date) [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        [ "${1}" != "1" ] && echo $(date) [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
     ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
     ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
-    [ "${1}" != "1" ] && echo $(date) [$$]: The running VPN daemon of this script in the system has been cleared. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+    [ "${1}" != "1" ] && echo $(date) [$$]: The running VPN daemon of this script in the system has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 clear_time_task() {
@@ -176,17 +176,17 @@ clear_event_interface() {
 check_file() {
 	local scripts_file_exist=0
 	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
 		scripts_file_exist=1
 	}
 	[ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
         clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
 		return 1
 	fi
     return 0
@@ -195,7 +195,7 @@ check_file() {
 stop_run() {
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
 
@@ -267,11 +267,11 @@ if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
 	cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
 	sleep 1s
 	rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
-	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG_FILE}" 2> /dev/null
-	echo $(date) [$$]: >> "${SYSLOG_FILE}" 2> /dev/null
+	echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
+	echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
+	echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
+	echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG}" 2> /dev/null
+	echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
 fi
 
 flock -u $LOCK_FILE_ID > /dev/null 2>&1
@@ -292,11 +292,11 @@ start_daemon() {
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 
     if [ -n "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
-            echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-            echo $(date) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+            echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(date) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ -n "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ]; then
-            echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-            echo $(date) [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+            echo $(date) [$$]: ---------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(date) [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
 
@@ -333,9 +333,9 @@ EOF_INTERFACE
 
 # -------------- Script execution ---------------
 
-echo $(date) [$$]: | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
+echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev/null
 
 while ture
 do
@@ -358,8 +358,8 @@ do
     break
 done
 
-echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-echo $(date) [$$]: | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
+echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 
 exit 0
 
