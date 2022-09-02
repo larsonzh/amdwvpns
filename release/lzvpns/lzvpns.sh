@@ -133,11 +133,12 @@ clear_time_task() {
 }
 
 delte_ip_rules() {
-    [ -z "$( ip rule list | grep -wo "^${1}" )" ] && {
+    local buffer="$( ip rule list | grep -wo "^${1}" )"
+    [ -z "$( echo "${buffer}" )" ] && {
         [ "${2}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${1}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
-    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
+    echo "${buffer}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
     [ "${2}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
 }
@@ -215,7 +216,7 @@ transfer_parameters() {
 
 set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
-    local router_local_ip="$( ifconfig br0 | grep "inet addr:" | awk -F: '{print $2}' | awk '{print $1}' 2> /dev/null )"
+    local router_local_ip="$( echo $( ifconfig br0 2> /dev/null ) | awk '{print $7}' | awk -F: '{print $2}' )"
     local access_wan="${WAN0}"
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan="${WAN1}"
     ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
