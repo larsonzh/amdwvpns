@@ -144,6 +144,11 @@ delte_ip_rules() {
     [ "${2}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
+restore_ip_rules() {
+    delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    delte_ip_rules "${IP_RULE_PRIO_HOST}"
+}
+
 restore_sub_routing_table() {
     local buffer="$( ip route list table "${1}" | grep -E 'pptp|tap|tun' )"
     [ -z "$( echo "${buffer}" )" ] && return 1
@@ -158,12 +163,18 @@ restore_routing_table() {
         [ "${1}" != "1" ] && echo $(date) [$$]: WAN0/WAN1 routing table is empty. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
-    restore_sub_routing_table "${WAN0}" \
-        && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
-    restore_sub_routing_table "${WAN1}" \
-        && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    restore_sub_routing_table "${WAN0}"
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+    else
+        [ "${1}" != "1" ] &&  echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    restore_sub_routing_table "${WAN1}"
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 }
 
 restore_balance_chain() {
@@ -370,8 +381,7 @@ do
     cleaning_user_data
     clear_daemon
     clear_time_task
-    delte_ip_rules "${IP_RULE_PRIO_VPN}"
-    delte_ip_rules "${IP_RULE_PRIO_HOST}"
+    restore_ip_rules
     restore_routing_table
     restore_balance_chain
     clear_ipsets
