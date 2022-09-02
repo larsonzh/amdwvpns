@@ -134,12 +134,12 @@ clear_time_task() {
 
 delte_ip_rules() {
     [ -z "$( ip rule list | grep -wo "^${1}" )"] && {
-        [ "${2}" != "1" ] && echo $(date) [$$]: None of rule with priority 998 in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${2}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${1}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
     ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
-    [ "${2}" != "1" ] && echo $(date) [$$]: All rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    [ "${2}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 restore_routing_table() {
