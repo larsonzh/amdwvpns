@@ -143,14 +143,16 @@ delte_ip_rules() {
 
 restore_ip_rules() {
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    local retval="${?}"
     if [ "${1}" != "1" ]; then
-        [ "${?}" = "0" ] \
+        [ "${retval}" = "0" ] \
             && echo $(date) [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
             || echo $(date) [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     delte_ip_rules "${IP_RULE_PRIO_HOST}"
+    retval="${?}"
     if [ "${1}" != "1" ]; then
-        [ "${?}" = "0" ] \
+        [ "${retval}" = "0" ] \
             && echo $(date) [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
             || echo $(date) [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
@@ -171,14 +173,16 @@ restore_routing_table() {
         return
     }
     restore_sub_routing_table "${WAN0}"
+    local retval="${?}"
     if [ "${1}" != "1" ]; then
-        [ "${?}" = "0" ] \
+        [ "${retval}" = "0" ] \
             && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
             || echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     restore_sub_routing_table "${WAN1}"
+    retval="${?}"
     if [ "${1}" != "1" ]; then
-        [ "${?}" = "0" ] \
+        [ "${retval}" = "0" ] \
             && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
             || echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
