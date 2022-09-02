@@ -126,15 +126,20 @@ clear_time_task() {
         [ "${1}" != "1" ] && echo $(date) [$$]: No scheduled tasks for this script are running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
-    cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
+    cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
-    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
+    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
     [ "${1}" != "1" ] && echo $(date) [$$]: The running scheduled tasks of this script have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 delte_ip_rules() {
+    [ -z "$( ip rule list | grep -wo "^${1}" )"] && {
+        [ "${2}" != "1" ] && echo $(date) [$$]: None of rule with priority 998 in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+        return
+    }
     ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
-         | awk '{system($0" > /dev/null 2>&1")}'
+        | awk '{system($0" > /dev/null 2>&1")}'
+    [ "${2}" != "1" ] && echo $(date) [$$]: All rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 restore_routing_table() {
