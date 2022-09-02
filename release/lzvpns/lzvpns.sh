@@ -147,15 +147,23 @@ delte_ip_rules() {
 restore_sub_routing_table() {
     local buffer="$( ip route list table "${1}" | grep -E 'pptp|tap|tun' )"
     [ -z "$( echo "${buffer}" )" ] && return 1
-    echo "${buffer}"  \
+    echo "${buffer}" \
         | awk '{print "ip route del "$0"'" table ${1}"'"}  END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
     return 0
 }
 
 restore_routing_table() {
-    restore_sub_routing_table "${WAN0}"
-    restore_sub_routing_table "${WAN1}"
+    [ -z "$( ip route list| grep nexthop )" ] && {
+        [ "${1}" != "1" ] && echo $(date) [$$]: WAN0/WAN1 routing table is empty. | tee -ai "${SYSLOG}" 2> /dev/null
+        return
+    }
+    restore_sub_routing_table "${WAN0}" \
+        && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+        || echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    restore_sub_routing_table "${WAN1}" \
+        && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+        || echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 restore_balance_chain() {
