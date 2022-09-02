@@ -116,8 +116,8 @@ clear_daemon() {
         [ "${1}" != "1" ] && echo $(date) [$$]: There is no VPN daemon running in the system. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
         return
     }
-	ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
-	ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
+    ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
+    ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' | xargs kill -9 > /dev/null 2>&1
     [ "${1}" != "1" ] && echo $(date) [$$]: The running VPN daemon of this script in the system has been cleared. | tee -ai "${SYSLOG_FILE}" 2> /dev/null \
 }
 
