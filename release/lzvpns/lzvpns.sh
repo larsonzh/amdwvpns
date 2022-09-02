@@ -235,27 +235,30 @@ clear_event_interface() {
 }
 
 check_file() {
-	local scripts_file_exist=0
-	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
-		scripts_file_exist=1
-	}
-	[ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
-		echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
-		scripts_file_exist=1
-	}
-	if [ "$scripts_file_exist" = 1 ]; then
+    local scripts_file_exist=0
+    [ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
+        echo $(date) [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
+        scripts_file_exist=1
+    }
+    [ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
+        echo $(date) [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
+        scripts_file_exist=1
+    }
+    if [ "$scripts_file_exist" = 1 ]; then
         clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-		return 1
-	fi
+        echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    fi
+    [ "${1}" != "1" ] && echo $(date) [$$]: Script files are located in the specified directory location. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
 
 stop_run() {
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled script boot event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
@@ -267,10 +270,15 @@ transfer_parameters() {
 set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
     local router_local_ip="$( echo $( ifconfig br0 2> /dev/null ) | awk '{print $7}' | awk -F: '{print $2}' )"
+    [ -z "${router_local_ip}" ] && {
+        echo $(date) [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 0
+    }
     local access_wan="${WAN0}"
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan="${WAN1}"
     ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+    return 0
 }
 
 create_vpn_ipsets() {
