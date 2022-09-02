@@ -144,10 +144,15 @@ delte_ip_rules() {
     [ "${2}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
-restore_routing_table() {
+restore_sub_routing_table() {
     ip route list table "${1}" | grep -E 'pptp|tap|tun' \
         | awk '{print "ip route del "$0"'" table ${1}"'"}  END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
+}
+
+restore_routing_table() {
+    restore_sub_routing_table "${WAN0}"
+    restore_sub_routing_table "${WAN1}"
 }
 
 restore_balance_chain() {
@@ -356,8 +361,7 @@ do
     clear_time_task
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
     delte_ip_rules "${IP_RULE_PRIO_HOST}"
-    restore_routing_table "${WAN0}"
-    restore_routing_table "${WAN1}"
+    restore_routing_table
     restore_balance_chain
     clear_ipsets
     init_directory
