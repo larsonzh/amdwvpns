@@ -322,8 +322,8 @@ craeate_daemon_start_scripts() {
 # By LZ (larsonzhang@gmail.com)
 # Do not manually modify!!!
 
-[ ! -d ${PATH_LOCK} ] && { mkdir -p ${PATH_LOCK} > /dev/null 2>&1; chmod 777 ${PATH_LOCK} > /dev/null 2>&1; }
-exec $LOCK_FILE_ID<>${LOCK_FILE}; flock -x $LOCK_FILE_ID > /dev/null 2>&1;
+[ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
+exec $LOCK_FILE_ID<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
 ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
 ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
@@ -333,14 +333,14 @@ if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
     rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
-    echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
-    echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
-    echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
-    echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG}" 2> /dev/null
-    echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
+    echo \$(date) [\$\$]: >> "${SYSLOG}" 2> /dev/null
+    echo \$(date) [\$\$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
+    echo \$(date) [\$\$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
+    echo \$(date) [\$\$]: ----------- LZ "$LZ_VERSION" VPN Daemon -------------- >> "${SYSLOG}" 2> /dev/null
+    echo \$(date) [\$\$]: >> "${SYSLOG}" 2> /dev/null
 fi
 
-flock -u $LOCK_FILE_ID > /dev/null 2>&1
+flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 
 EOF_START_DAEMON_SCRIPT
     chmod +x "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
@@ -431,7 +431,7 @@ start_service() {
 
 # -------------- Script Execution ---------------
 
-[ ! -d ${PATH_LOCK} ] && { mkdir -p ${PATH_LOCK} > /dev/null 2>&1; chmod 777 ${PATH_LOCK} > /dev/null 2>&1; }
+[ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
 exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
 echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
