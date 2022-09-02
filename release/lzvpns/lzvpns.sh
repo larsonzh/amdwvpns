@@ -135,18 +135,25 @@ clear_time_task() {
 
 delte_ip_rules() {
     local buffer="$( ip rule list | grep -wo "^${1}" )"
-    [ -z "$( echo "${buffer}" )" ] && {
-        [ "${2}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${1}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
-        return
-    }
+    [ -z "$( echo "${buffer}" )" ] && return 1
     echo "${buffer}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
-    [ "${2}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${1}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 0
 }
 
 restore_ip_rules() {
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
     delte_ip_rules "${IP_RULE_PRIO_HOST}"
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(date) [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(date) [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 }
 
 restore_sub_routing_table() {
@@ -165,7 +172,7 @@ restore_routing_table() {
     }
     restore_sub_routing_table "${WAN0}"
     if [ "${?}" = "0" ]; then
-        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         [ "${1}" != "1" ] &&  echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
