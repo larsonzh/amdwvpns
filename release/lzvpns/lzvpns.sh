@@ -113,7 +113,7 @@ cleaning_user_data() {
 
 clear_daemon() {
     [ -z "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" -a -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
-        [ "${1}" != "1" ] && echo $(date) [$$]: There is no VPN daemon running in the system. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        [ "${1}" != "1" ] && echo $(date) [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
         return
     }
     ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
