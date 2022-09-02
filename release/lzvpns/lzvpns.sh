@@ -254,15 +254,6 @@ check_file() {
     return 0
 }
 
-stop_run() {
-    clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
-    clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    [ "${1}" != "1" ] && echo $(date) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
-    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
-}
-
 transfer_parameters() {
     sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
 }
@@ -369,15 +360,6 @@ start_daemon() {
     fi
 }
 
-start_service() {
-    [ -z "$( ip route list| grep nexthop )" ] && return 1
-    set_wan_access_port
-    set_balance_chain
-    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    start_daemon
-    return 0
-}
-
 create_event_interface() {
     [ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
     if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
@@ -406,6 +388,39 @@ register_event_interface() {
     [ "${1}" != "1" ] && echo $(date) [$$]: Registration script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
+init_service() {
+    cleaning_user_data
+    clear_daemon
+    clear_time_task
+    restore_ip_rules
+    restore_routing_table
+    restore_balance_chain
+    clear_ipsets
+    init_directory
+    check_file || return 1
+    return 0
+}
+
+stop_service() {
+    clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
+    [ "${1}" != "1" ] && echo $(date) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    echo $(date) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 0
+}
+
+start_service() {
+    transfer_parameters
+    [ -z "$( ip route list| grep nexthop )" ] && return 1
+    set_wan_access_port
+    set_balance_chain
+    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+    start_daemon
+    register_event_interface
+    return 0
+}
+
 
 # -------------- Script execution ---------------
 
@@ -415,19 +430,9 @@ echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev
 
 while ture
 do
-    cleaning_user_data
-    clear_daemon
-    clear_time_task
-    restore_ip_rules
-    restore_routing_table
-    restore_balance_chain
-    clear_ipsets
-    init_directory
-    check_file || break
-    [ "${1}" = "stop" ] && stop_run && break
-    transfer_parameters
+    init_service || break
+    [ "${1}" = "stop" ] && stop_service && break
     start_service
-    register_event_interface
     break
 done
 
