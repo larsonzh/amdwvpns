@@ -432,7 +432,7 @@ start_service() {
 # -------------- Script Execution ---------------
 
 [ ! -d ${PATH_LOCK} ] && { mkdir -p ${PATH_LOCK} > /dev/null 2>&1; chmod 777 ${PATH_LOCK} > /dev/null 2>&1; }
-exec 555<>"${LOCK_FILE}"; flock -x "$LOCK_FILE_ID" > /dev/null 2>&1;
+exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
 echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
@@ -449,7 +449,7 @@ done
 echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(date) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 
-flock -u "$LOCK_FILE_ID" > /dev/null 2>&1
+flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 
 exit 0
 
