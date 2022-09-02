@@ -143,16 +143,16 @@ delte_ip_rules() {
 
 restore_ip_rules() {
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
-    if [ "${?}" = "0" ]; then
-        [ "${1}" != "1" ] && echo $(date) [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${1}" != "1" ]; then
+        [ "${?}" = "0" ] \
+            && echo $(date) [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
+            || echo $(date) [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     delte_ip_rules "${IP_RULE_PRIO_HOST}"
-    if [ "${?}" = "0" ]; then
-        [ "${1}" != "1" ] && echo $(date) [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] && echo $(date) [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${1}" != "1" ]; then
+        [ "${?}" = "0" ] \
+            && echo $(date) [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
+            || echo $(date) [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
 
@@ -171,29 +171,34 @@ restore_routing_table() {
         return
     }
     restore_sub_routing_table "${WAN0}"
-    if [ "${?}" = "0" ]; then
-        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] &&  echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${1}" != "1" ]; then
+        [ "${?}" = "0" ] \
+            && echo $(date) [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+            || echo $(date) [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     restore_sub_routing_table "${WAN1}"
-    if [ "${?}" = "0" ]; then
-        [ "${1}" != "1" ] && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] && echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${1}" != "1" ]; then
+        [ "${?}" = "0" ] \
+            && echo $(date) [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
+            || echo $(date) [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
 
 restore_balance_chain() {
     [ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
     local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
-            | grep -E "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
-            | cut -d " " -f 1 | sort -nr )"
+            | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
+            | cut -d " " -f 1 | sort -nr | grep '^[0-9]*' )"
+    [ -z "${number}" ] && {
+        [ "${1}" != "1" ] && echo $(date) [$$]: None of VPN item in the balance chain. | tee -ai "${SYSLOG}" 2> /dev/null
+        return
+    }
     local item_no=
     for item_no in ${number}
     do
         iptables -t mangle -D balance "${item_no}" > /dev/null 2>&1
     done
+    [ "${1}" != "1" ] && echo $(date) [$$]: All VPN items in the balance chain have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 clear_ipsets() {
