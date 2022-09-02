@@ -133,7 +133,7 @@ clear_time_task() {
 }
 
 delte_ip_rules() {
-    [ -z "$( ip rule list | grep -wo "^${1}" )"] && {
+    [ -z "$( ip rule list | grep -wo "^${1}" )" ] && {
         [ "${2}" != "1" ] && echo $(date) [$$]: None of VPN rule with priority "${1}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
