@@ -230,7 +230,7 @@ init_directory() {
 }
 
 clear_event_interface() {
-	[ -f "${PATH_BOOTLOADER}/${1}" ] && \
+    [ -f "${PATH_BOOTLOADER}/${1}" ] && \
         sed -i "/"${2}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
