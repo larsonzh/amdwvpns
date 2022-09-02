@@ -122,9 +122,14 @@ clear_daemon() {
 }
 
 clear_time_task() {
+    [ -z "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ] && {
+        [ "${1}" != "1" ] && echo $(date) [$$]: No scheduled tasks for this script are running. | tee -ai "${SYSLOG}" 2> /dev/null
+        return
+    }
     cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
     sleep 1s
     rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
+    [ "${1}" != "1" ] && echo $(date) [$$]: The running scheduled tasks of this script have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 delte_ip_rules() {
