@@ -288,20 +288,20 @@ create_vpn_ipsets() {
 }
 
 get_match_set() {
-	case ${HARDWARE_TYPE} in
-		armv7l)
-			MATCH_SET='--match-set'
-		;;
-		mips)
-			MATCH_SET='--set'
-		;;
-		aarch64)
-			MATCH_SET='--match-set'
-		;;
-		*)
-			MATCH_SET='--match-set'
-		;;
-	esac
+    case ${HARDWARE_TYPE} in
+        armv7l)
+            MATCH_SET='--match-set'
+        ;;
+        mips)
+            MATCH_SET='--set'
+        ;;
+        aarch64)
+            MATCH_SET='--match-set'
+        ;;
+        *)
+            MATCH_SET='--match-set'
+        ;;
+    esac
     echo "${MATCH_SET}"
 }
 
@@ -333,14 +333,14 @@ ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kil
 nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
 sleep 1s
 if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
-	cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
-	sleep 1s
-	rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
-	echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
-	echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
-	echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
-	echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG}" 2> /dev/null
-	echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
+    cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
+    sleep 1s
+    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+    echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
+    echo $(date) [$$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
+    echo $(date) [$$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
+    echo $(date) [$$]: ----------- LZ $LZ_VERSION VPN Daemon -------------- >> "${SYSLOG}" 2> /dev/null
+    echo $(date) [$$]: >> "${SYSLOG}" 2> /dev/null
 fi
 
 flock -u $LOCK_FILE_ID > /dev/null 2>&1
@@ -379,24 +379,24 @@ start_service() {
 }
 
 create_event_interface() {
-	[ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
-	if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
-		cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
+    [ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
+    if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
+        cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
 #!/bin/sh
 EOF_INTERFACE
-	fi
-	[ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
-	if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
-		sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	else
-		[ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
+    fi
+    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
+    if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
+        sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    else
+        [ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
             sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	fi
-	if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
-		sed -i "/"${3}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-		sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-	fi
-	chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    fi
+    if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
+        sed -i "/"${3}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+        sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    fi
+    chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
 }
 
 
