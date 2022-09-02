@@ -121,7 +121,7 @@ check_file() {
 		scripts_file_exist=1
 	}
 	if [ "$scripts_file_exist" = 1 ]; then
-		echo -e $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+		echo $(date) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 		return 1
 	fi
     return 0
@@ -315,7 +315,7 @@ start_service() {
 
 echo $(date) [$$]: | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 echo $(date) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG_FILE}" 2> /dev/null
-echo -e $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG_FILE}" 2> /dev/null
 
 while ture
 do
