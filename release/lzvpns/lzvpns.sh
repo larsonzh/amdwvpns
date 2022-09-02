@@ -90,6 +90,7 @@ START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 HARDWARE_TYPE=$( uname -m )
 MATCH_SET='--match-set'
 
+HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
 
 # ------------------ Function -------------------
 
@@ -402,6 +403,7 @@ init_service() {
 }
 
 stop_service() {
+    [ "${HAMMER}" != "stop" ] && return 1
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     [ "${1}" != "1" ] && echo $(date) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
@@ -431,7 +433,7 @@ echo $(date) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev
 while ture
 do
     init_service || break
-    [ "${1}" = "stop" ] && stop_service && break
+    stop_service && break
     start_service
     break
 done
