@@ -19,5 +19,6 @@ OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 SYSLOG="/tmp/syslog.log"
+LZDATE() { echo "$( date +"%F %T" )"; }
 
 # END
