@@ -21,7 +21,7 @@
 WAN_ACCESS_PORT=0
 
 # The router port used by the VPN client to access the WAN through the router.
-# 0--Primary WAN (Default), 1--Secondary WAN, Other--System allocation
+# 0--Primary WAN (Default), 1--Secondary WAN, Other--System Allocation
 VPN_WAN_PORT=0
 
 # Polling time to detect VPN client access.
@@ -94,8 +94,21 @@ MATCH_SET='--match-set'
 # ------------------ Function -------------------
 
 cleaning_user_data() {
-    [ "${WAN_ACCESS_PORT}" -lt 0 -o "${WAN_ACCESS_PORT}" -gt 1 ] && WAN_ACCESS_PORT=0
-    [ "${POLLING_TIME}" -lt 0 -o "${POLLING_TIME}" -gt 10 ] && POLLING_TIME=5
+    [ "${1}" != "1" ] && {
+        local str="Primary WAN *"
+        [ "${WAN_ACCESS_PORT}" = "0" ] && str="Primary WAN"
+        [ "${WAN_ACCESS_PORT}" = "1" ] && str="Secondary WAN"
+        echo $(date) [$$]: WAN Access Port: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        str="System Allocation"
+        [ "${VPN_WAN_PORT}" = "0" ] && str="Primary WAN"
+        [ "${VPN_WAN_PORT}" = "1" ] && str="Secondary WAN"
+        echo $(date) [$$]: VPN WAN Port: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+        str="5s"
+        [ "${POLLING_TIME}" -ge "0" -a "${POLLING_TIME}" -le "10" ] && srt="${POLLING_TIME}s"
+        echo $(date) [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG_FILE}" 2> /dev/null
+    }
+    [ "${WAN_ACCESS_PORT}" -lt "0" -o "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT=0
+    [ "${POLLING_TIME}" -lt "0" -o "${POLLING_TIME}" -gt "10" ] && POLLING_TIME=5
 }
 
 clear_daemon() {
