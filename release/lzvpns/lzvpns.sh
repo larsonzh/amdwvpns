@@ -267,7 +267,7 @@ update_data_item() {
         sed -i "s:"${1}"=.*$:"${1}"=\""${"${1}"}"\":g" "${2}" > /dev/null 2>&1
         data_item="$( grep -wo "${1}=.$" "${2}" > /dev/null 2>&1 | sed 's/\"//g' )"
         [ "${data_item#*=}" != "${${1}}" ] && return 3
-       return 2
+        return 2
     }
     return 0
 }
