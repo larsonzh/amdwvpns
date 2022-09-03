@@ -260,8 +260,27 @@ check_file() {
     return 0
 }
 
-transfer_parameters() {
-    sed -i "s:VPN_WAN_PORT=.*$:VPN_WAN_PORT="${VPN_WAN_PORT}":g" ${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS} > /dev/null 2>&1
+update_data_item() {
+    local data_item="$( grep -wo "${1}=.$" "${2}" > /dev/null 2>&1 | sed 's/\"//g' )"
+    [ -z "$( echo "${data_item}" )" ] && return 1
+    [ "${data_item#*=}" != "${${1}}" ] && {
+        sed -i "s:"${1}"=.*$:"${1}"="${"${1}"}":g" "${2}" > /dev/null 2>&1
+        return 2
+    }
+    return 0
+}
+
+update_data() {
+    update_data_item "VPN_WAN_PORT" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+    local retval="${?}"
+    if [ "${retval}" = "1" ]; then
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item VPN_WAN_PORT in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    elif [ "${retval}" = "2" ]; then
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item VPN_WAN_PORT in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN event processing script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
+    returo 0
 }
 
 set_wan_access_port() {
@@ -418,7 +437,7 @@ stop_service() {
 }
 
 start_service() {
-    transfer_parameters
+    update_data
     [ -z "$( ip route list| grep nexthop )" ] && return 1
     set_wan_access_port
     set_balance_chain
