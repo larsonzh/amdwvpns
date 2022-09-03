@@ -270,72 +270,72 @@ update_data_item() {
     return 0
 }
 
-update_data() {
-    update_data_item "VPN_WAN_PORT" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+update_event_data_item() {
+    update_data_item "${1}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     local retval="${?}"
     if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item VPN_WAN_PORT in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${2}" != "1" ] && {
+            echo $(lzdate) [$$]: Missing data item "${1}" in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Data item consistency confirmation in VPN event processing script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        }
         return 1
     elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item VPN_WAN_PORT in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
-    update_data_item "WAN0" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
+    return 0
+}
+
+update_daemon_data_item() {
+    update_data_item "${1}" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}"
+    local retval="${?}"
     if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item WAN0 in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${2}" != "1" ] && {
+            echo $(lzdate) [$$]: Missing data item "${1}" in VPN daemon script file. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Data item consistency confirmation in VPN daemon script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        }
         return 1
     elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item WAN0 in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN daemon script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
-    update_data_item "WAN1" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item WAN1 in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item WAN1 in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    update_data_item "IP_RULE_PRIO_VPN" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item IP_RULE_PRIO_VPN in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item IP_RULE_PRIO_VPN in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    update_data_item "OVPN_SUBNET_IP_SET" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item OVPN_SUBNET_IP_SET in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item OVPN_SUBNET_IP_SET in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    update_data_item "PPTP_CLIENT_IP_SET" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item PPTP_CLIENT_IP_SET in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item PPTP_CLIENT_IP_SET in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    update_data_item "IPSEC_SUBNET_IP_SET" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item IPSEC_SUBNET_IP_SET in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item IPSEC_SUBNET_IP_SET in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    update_data_item "SYSLOG" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-    retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Missing data item SYSLOG in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The data item SYSLOG in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
+    return 0
+}
+
+update_data() {
+    update_event_data_item "VPN_WAN_PORT"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "WAN0"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "WAN1"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "IP_RULE_PRIO_VPN"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "OVPN_SUBNET_IP_SET"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "PPTP_CLIENT_IP_SET"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "IPSEC_SUBNET_IP_SET"
+    [ "${?}" = "1" ] && return 1
+    update_event_data_item "SYSLOG"
+    [ "${?}" = "1" ] && return 1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN event processing script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
+
+    update_daemon_data_item "POLLING_TIME"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "WAN0"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "WAN1"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "VPN_EVENT_INTERFACE_SCRIPTS"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "PPTP_CLIENT_IP_SET"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "IPSEC_SUBNET_IP_SET"
+    [ "${?}" = "1" ] && return 1
+    update_daemon_data_item "VPN_DAEMON_IP_SET_LOCK"
+    [ "${?}" = "1" ] && return 1
+    [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN daemon script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
     returo 0
 }
