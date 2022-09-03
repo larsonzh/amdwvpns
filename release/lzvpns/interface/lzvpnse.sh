@@ -6,7 +6,7 @@
 
 # BEIGIN
 
-# --------- lzvpns.sh update data area ----------
+# ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
 VPN_WAN_PORT=0
 WAN0=100
