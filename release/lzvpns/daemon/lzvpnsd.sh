@@ -10,14 +10,6 @@ PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
 PATH_INTERFACE=“${PATH_INTERFACE%/*}/interface”
 
-POLLING_TIME=5
-WAN0=100
-WAN1=200
-VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
-PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
-IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
-VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
-
 # ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
 TRANSDATA=">>>>>>>"
@@ -38,7 +30,15 @@ get_transdata() {
 	return 0
 }
 
-get_transdata
+get_transdata || {
+	POLLING_TIME=5
+	WAN0=100
+	WAN1=200
+	VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
+	PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
+	IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
+	VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
+}
 
 PLTIME="${PLTIME}"
 [ "${1}" -gt 0 -a "${1}" -le 60 ] && PLTIME="${1}"
