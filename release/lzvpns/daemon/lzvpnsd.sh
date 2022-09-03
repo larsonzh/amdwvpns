@@ -12,7 +12,7 @@ PATH_INTERFACE=“${PATH_INTERFACE%/*}/interface”
 
 # ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
-TRANSDATA=">>>>>>>"
+TRANSDATA=">>>>>>>>"
 # ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
 
