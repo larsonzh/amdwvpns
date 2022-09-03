@@ -285,12 +285,13 @@ consistency_update() {
     elif [ "${retval}" = "2" ]; then
         [ "${4}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN "${3}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ "${retval}" = "3" ]; then
-        return 1
         [ "${4}" != "1" ] && {
             echo $(lzdate) [$$]: Update of data item "${1}" in VPN "${3}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
             echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         }
+        return 1
     fi
+    [ "${4}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN "${3}" script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
 
@@ -298,12 +299,10 @@ update_data() {
     local TRANSDATA=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}""
     consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
     [ "${?}" = "1" ] && return 1
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN event processing script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
     TRANSDATA=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${VPN_DAEMON_IP_SET_LOCK}""
     consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"
     [ "${?}" = "1" ] && return 1
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN daemon script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
     returo 0
 }
