@@ -265,7 +265,9 @@ update_data_item() {
     [ -z "$( echo "${data_item}" )" ] && return 1
     [ "${data_item#*=}" != "${${1}}" ] && {
         sed -i "s:"${1}"=.*$:"${1}"="${"${1}"}":g" "${2}" > /dev/null 2>&1
-        return 2
+        data_item="$( grep -wo "${1}=.$" "${2}" > /dev/null 2>&1 | sed 's/\"//g' )"
+        [ "${data_item#*=}" != "${${1}}" ] && return 3
+       return 2
     }
     return 0
 }
@@ -282,6 +284,12 @@ update_event_data_item() {
         return 1
     elif [ "${retval}" = "2" ]; then
         [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+    elif [ "${retval}" = "3" ]; then
+        return 1
+        [ "${2}" != "1" ] && {
+            echo $(lzdate) [$$]: Update of data item "${1}" in VPN event processing script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        }
     fi
     return 0
 }
@@ -298,6 +306,12 @@ update_daemon_data_item() {
         return 1
     elif [ "${retval}" = "2" ]; then
         [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN daemon script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+    elif [ "${retval}" = "3" ]; then
+        return 1
+        [ "${2}" != "1" ] && {
+            echo $(lzdate) [$$]: Update of data item "${1}" in VPN daemon script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        }
     fi
     return 0
 }
