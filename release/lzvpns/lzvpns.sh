@@ -303,37 +303,13 @@ update_daemon_data_item() {
 }
 
 update_data() {
-    update_event_data_item "VPN_WAN_PORT"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "WAN0"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "WAN1"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "IP_RULE_PRIO_VPN"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "OVPN_SUBNET_IP_SET"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "PPTP_CLIENT_IP_SET"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "IPSEC_SUBNET_IP_SET"
-    [ "${?}" = "1" ] && return 1
-    update_event_data_item "SYSLOG"
+    local TRANSDATA=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}""
+    update_event_data_item "TRANSDATA"
     [ "${?}" = "1" ] && return 1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN event processing script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
-    update_daemon_data_item "POLLING_TIME"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "WAN0"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "WAN1"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "VPN_EVENT_INTERFACE_SCRIPTS"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "PPTP_CLIENT_IP_SET"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "IPSEC_SUBNET_IP_SET"
-    [ "${?}" = "1" ] && return 1
-    update_daemon_data_item "VPN_DAEMON_IP_SET_LOCK"
+    TRANSDATA=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${VPN_DAEMON_IP_SET_LOCK}""
+    update_daemon_data_item "TRANSDATA"
     [ "${?}" = "1" ] && return 1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN daemon script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
