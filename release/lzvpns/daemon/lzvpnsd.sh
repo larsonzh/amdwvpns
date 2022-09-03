@@ -10,7 +10,7 @@ PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
 PATH_INTERFACE=“${PATH_INTERFACE%/*}/interface”
 
-# --------- lzvpns.sh update data area ----------
+# ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
 POLLING_TIME=5
 WAN0=100
