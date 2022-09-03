@@ -20,13 +20,13 @@ get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"
 
 get_transdata() {
 	[ -n "$( echo "${TRANSDATA}" | grep -E '^[>]|[>][>]' )" ] && return 1
-    POLLING_TIME="$( get_trsta "1" )"
-    WAN0="$( get_trsta "2" )"
-    WAN1="$( get_trsta "3" )"
-    VPN_EVENT_INTERFACE_SCRIPTS="$( get_trsta "4" )"
-    PPTP_CLIENT_IP_SET="$( get_trsta "5" )"
-    IPSEC_SUBNET_IP_SET="$( get_trsta "6" )"
-    VPN_DAEMON_IP_SET_LOCK="$( get_trsta "7" )"
+	POLLING_TIME="$( get_trsta "1" )"
+	WAN0="$( get_trsta "2" )"
+	WAN1="$( get_trsta "3" )"
+	VPN_EVENT_INTERFACE_SCRIPTS="$( get_trsta "4" )"
+	PPTP_CLIENT_IP_SET="$( get_trsta "5" )"
+	IPSEC_SUBNET_IP_SET="$( get_trsta "6" )"
+	VPN_DAEMON_IP_SET_LOCK="$( get_trsta "7" )"
 	return 0
 }
 
