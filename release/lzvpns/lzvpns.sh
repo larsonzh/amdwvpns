@@ -272,44 +272,22 @@ update_data_item() {
     return 0
 }
 
-update_event_data_item() {
-    update_data_item "${1}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+consistency_update() {
+    update_data_item "${1}" "${2}"
     local retval="${?}"
     if [ "${retval}" = "1" ]; then
-        [ "${2}" != "1" ] && {
-            echo $(lzdate) [$$]: Missing data item "${1}" in VPN event processing script file. | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: Data item consistency confirmation in VPN event processing script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${4}" != "1" ] && {
+            echo $(lzdate) [$$]: Missing data item "${1}" in VPN "${3}" script file. | tee -ai "${SYSLOG}" 2> /dev/null
+            echo $(lzdate) [$$]: Data item consistency confirmation in VPN "${3}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
             echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         }
         return 1
     elif [ "${retval}" = "2" ]; then
-        [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN event processing script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${4}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN "${3}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ "${retval}" = "3" ]; then
         return 1
-        [ "${2}" != "1" ] && {
-            echo $(lzdate) [$$]: Update of data item "${1}" in VPN event processing script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-        }
-    fi
-    return 0
-}
-
-update_daemon_data_item() {
-    update_data_item "${1}" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}"
-    local retval="${?}"
-    if [ "${retval}" = "1" ]; then
-        [ "${2}" != "1" ] && {
-            echo $(lzdate) [$$]: Missing data item "${1}" in VPN daemon script file. | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: Data item consistency confirmation in VPN daemon script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-        }
-        return 1
-    elif [ "${retval}" = "2" ]; then
-        [ "${2}" != "1" ] && echo $(lzdate) [$$]: The data item "${1}" in VPN daemon script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
-    elif [ "${retval}" = "3" ]; then
-        return 1
-        [ "${2}" != "1" ] && {
-            echo $(lzdate) [$$]: Update of data item "${1}" in VPN daemon script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${4}" != "1" ] && {
+            echo $(lzdate) [$$]: Update of data item "${1}" in VPN "${3}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
             echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         }
     fi
@@ -318,12 +296,12 @@ update_daemon_data_item() {
 
 update_data() {
     local TRANSDATA=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}""
-    update_event_data_item "TRANSDATA"
+    consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
     [ "${?}" = "1" ] && return 1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN event processing script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
     TRANSDATA=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${VPN_DAEMON_IP_SET_LOCK}""
-    update_daemon_data_item "TRANSDATA"
+    consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"
     [ "${?}" = "1" ] && return 1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: All data items in VPN daemon script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
 
