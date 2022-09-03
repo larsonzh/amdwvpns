@@ -6,7 +6,7 @@
 
 # BEIGIN
 
-# -------- lzvpns.sh transfer data area ---------
+# --------- lzvpns.sh update data area ----------
 # ---------- Don't manually modify !!! ----------
 VPN_WAN_PORT=0
 WAN0=100
@@ -18,7 +18,6 @@ IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 SYSLOG="/tmp/syslog.log"
 # ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
-
 
 lzdate() { echo "$( date +"%F %T" )"; }
 
