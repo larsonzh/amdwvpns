@@ -6,15 +6,6 @@
 
 # BEIGIN
 
-VPN_WAN_PORT=0
-WAN0=100
-WAN1=200
-IP_RULE_PRIO_VPN=998
-OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
-PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
-IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
-SYSLOG="/tmp/syslog.log"
-
 # ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
 TRANSDATA=">>>>>>>>"
@@ -38,6 +29,15 @@ get_transdata() {
 lzdate() { echo "$( date +"%F %T" )"; }
 
 
-get_transdata
+get_transdata || {
+    VPN_WAN_PORT=0
+    WAN0=100
+    WAN1=200
+    IP_RULE_PRIO_VPN=998
+    OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
+    PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
+    IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
+    SYSLOG="/tmp/syslog.log"
+}
 
 # END
