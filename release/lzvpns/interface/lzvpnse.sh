@@ -6,8 +6,6 @@
 
 # BEIGIN
 
-# ------------- Data Exchange Area --------------
-# ---------- Don't manually modify !!! ----------
 VPN_WAN_PORT=0
 WAN0=100
 WAN1=200
@@ -16,14 +14,17 @@ OVPN_SUBNET_IP_SET="lzvpns_ovpn_subnet"
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 SYSLOG="/tmp/syslog.log"
+
+# ------------- Data Exchange Area --------------
+# ---------- Don't manually modify !!! ----------
 TRANSDATA=">>>>>>>>"
 # ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
 
-
 get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
 
 get_transdata() {
+    [ -n "$( echo "${TRANSDATA}" | grep -E '^[>]|[>][>]' )" ] && return 1
     VPN_WAN_PORT="$( get_trsta "1" )"
     WAN0="$( get_trsta "2" )"
     WAN1="$( get_trsta "3" )"
