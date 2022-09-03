@@ -494,8 +494,8 @@ stop_service() {
 }
 
 start_service() {
-    update_data
-    [ -z "$( ip route list| grep nexthop )" ] && return 1
+    update_data || return 1
+    [ -z "$( ip route list | grep nexthop )" ] && return 1
     set_wan_access_port
     set_balance_chain
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
