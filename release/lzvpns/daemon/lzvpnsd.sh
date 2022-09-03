@@ -10,16 +10,23 @@ PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
 PATH_INTERFACE=“${PATH_INTERFACE%/*}/interface”
 
-WAN0=100; WAN1=200;
+# --------- lzvpns.sh update data area ----------
+# ---------- Don't manually modify !!! ----------
+POLLING_TIME=5
+WAN0=100
+WAN1=200
 VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
-ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" nethash
+# ---------- Don't manually modify !!! ----------
+# -----------------------------------------------
 
-POLLING_TIME=5
-[ "${1}" -gt 0 -a "${1}" -le 60 ] && POLLING_TIME="${1}"
-POLLING_TIME=$( echo "${POLLING_TIME}" | sed 's/\(^.*$\)/\1s/g' )
+PLTIME="${PLTIME}"
+[ "${1}" -gt 0 -a "${1}" -le 60 ] && PLTIME="${1}"
+PLTIME=$( echo "${PLTIME}" | sed 's/\(^.*$\)/\1s/g' )
+
+ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" nethash
 
 PPTPD_ENABLE="$( nvram get pptpd_enable)"
 IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
@@ -80,7 +87,7 @@ do
 
 	[ "${PPTPD_ENABLE}" != "1" -a "${IPSEC_SERVER_ENABLE}" != "1" ] && break
 
-	eval sleep "${POLLING_TIME}"
+	eval sleep "${PLTIME}"
 done
 
 ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
