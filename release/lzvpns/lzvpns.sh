@@ -312,7 +312,7 @@ update_data() {
 }
 
 set_wan_access_port() {
-    [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
+    [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return 2
     local router_local_ip="$( echo $( ifconfig br0 2> /dev/null ) | awk '{print $7}' | awk -F: '{print $2}' )"
     [ -z "${router_local_ip}" ] && {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
