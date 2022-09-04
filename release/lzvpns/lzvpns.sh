@@ -457,6 +457,7 @@ register_event_interface() {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_daemon
         clear_time_task
+        clear_daemon "1"
         restore_ip_rules
         restore_routing_table
         restore_balance_chain
@@ -470,6 +471,7 @@ init_service() {
     cleaning_user_data
     clear_daemon
     clear_time_task
+    clear_daemon "1"
     restore_ip_rules
     restore_routing_table
     restore_balance_chain
