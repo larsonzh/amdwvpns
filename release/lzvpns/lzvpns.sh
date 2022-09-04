@@ -4,9 +4,10 @@
 
 # LZ script for asuswrt/merlin based router
 
-# Script command: (e.g., in the lzvpns Directory)
-# Start/Restart:  ./lzvpns.sh
-# Stop:           ./lzvpns.sh stop
+# Script command (e.g., in the lzvpns Directory)
+# Start/Restart     ./lzvpns.sh
+# Stop              ./lzvpns.sh stop
+# Forced Unlocking  ./lzvpns.sh unlock
 
 
 # Main execution script
@@ -90,7 +91,7 @@ START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 HARDWARE_TYPE=$( uname -m )
 MATCH_SET='--match-set'
 
-# lzvpns script Commands
+# Script Commands
 HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
 STOP_RUN="stop"
 FORCED_UNLOCKING="unlock"
