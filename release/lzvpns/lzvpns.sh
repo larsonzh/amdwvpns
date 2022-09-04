@@ -90,7 +90,10 @@ START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 HARDWARE_TYPE=$( uname -m )
 MATCH_SET='--match-set'
 
+# Commands
 HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
+STOP_RUN="stop"
+FORCED_UNLOCKING="unlock"
 
 PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
@@ -491,7 +494,7 @@ init_service() {
 }
 
 stop_service() {
-    [ "${HAMMER}" != "stop" ] && return 1
+    [ "${HAMMER}" != "${STOP_RUN}" ] && return 1
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
     [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
@@ -512,6 +515,9 @@ start_service() {
 }
 
 set_lock() {
+    if [ "${HAMMER}" = "${FORCED_UNLOCKING}" ]; then
+        return 1
+    fi
     echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
     exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
@@ -527,6 +533,7 @@ set_lock() {
 }
 
 unset_lock() {
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
         rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
