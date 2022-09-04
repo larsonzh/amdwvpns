@@ -26,7 +26,6 @@ get_transdata() {
 	VPN_EVENT_INTERFACE_SCRIPTS="$( get_trsta "4" )"
 	PPTP_CLIENT_IP_SET="$( get_trsta "5" )"
 	IPSEC_SUBNET_IP_SET="$( get_trsta "6" )"
-	VPN_DAEMON_IP_SET_LOCK="$( get_trsta "7" )"
 	return 0
 }
 
@@ -37,18 +36,15 @@ get_transdata || {
 	VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
 	PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 	IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
-	VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 }
 
 [ "${1}" -gt 0 -a "${1}" -le 60 ] && POLLING_TIME="${1}"
 POLLING_TIME="${POLLING_TIME}s"
 
-ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" nethash
-
 PPTPD_ENABLE="$( nvram get pptpd_enable)"
 IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
 
-while [ -n "$( ipset -q -n list "${VPN_DAEMON_IP_SET_LOCK}" )" ]
+while [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ]
 do
 	if [ "${PPTPD_ENABLE}" = "1" ]; then
 		PPTPD_ENABLE="$( nvram get pptpd_enable)"
@@ -116,7 +112,5 @@ do
 
 	eval sleep "${POLLING_TIME}"
 done
-
-ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
 
 # END
