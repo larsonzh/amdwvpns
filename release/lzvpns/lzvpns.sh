@@ -472,6 +472,7 @@ register_event_interface() {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
+    return 0
 }
 
 init_service() {
