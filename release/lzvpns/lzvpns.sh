@@ -322,13 +322,14 @@ set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan="${WAN1}"
     ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
-    [ -n "$( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' | grep "${router_local_ip}" )" \
-    -a -n "( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' | grep "${router_local_ip}" )" ] \
-    && [ "${1}" != "1" ] && echo $(lzdate) [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null \
-    || {
+    ip route flush cache > /dev/null 2>&1
+    if [ -n "$( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep "${router_local_ip}" )" \
+        -a -n "( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep "${router_local_ip}" )" ]; then
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
         [ "${1}" != "1" ] &&  echo $(lzdate) [$$]: WAN access port configuration failed. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
-    }
+    fi
     return 0
 }
 
