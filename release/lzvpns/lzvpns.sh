@@ -383,6 +383,7 @@ if [ -n "\$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
     rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+    lzdate() { echo "\$( date +"%F %T" )"; }
     echo \$(lzdate) [\$\$]: >> "${SYSLOG}" 2> /dev/null
     echo \$(lzdate) [\$\$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
     echo \$(lzdate) [\$\$]: The VPN daemon has been started again. >> "${SYSLOG}" 2> /dev/null
