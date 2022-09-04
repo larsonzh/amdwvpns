@@ -554,12 +554,11 @@ unset_lock() {
 
 command_parsing() {
     [ "${PARAM_TOTAL}" = "0" ] && return 0
-    [ "${HAMMER}" != "${STOP_RUN}" -a "${HAMMER}" != "${FORCED_UNLOCKING}" ] && {
-        HAMMER="error"
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    }
-    return 0
+    [ "${HAMMER}" != "${STOP_RUN}" ] && return 0
+    [ "${HAMMER}" != "${FORCED_UNLOCKING}" ] && return 0
+    HAMMER="error"
+    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 1
 }
 
 
