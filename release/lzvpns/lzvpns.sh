@@ -5,9 +5,9 @@
 # LZ script for asuswrt/merlin based router
 
 # Script command (e.g., in the lzvpns Directory)
-# Start/Restart     ./lzvpns.sh
-# Stop              ./lzvpns.sh stop
-# Forced Unlocking  ./lzvpns.sh unlock
+# Start/Restart         ./lzvpns.sh
+# Stop                  ./lzvpns.sh stop
+# Forced Unlocking      ./lzvpns.sh unlock
 
 
 # Main execution script
