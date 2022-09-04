@@ -517,15 +517,6 @@ start_service() {
     return 0
 }
 
-command_parsing() {
-    [ "${#PARAM_TOTAL}" = "0" ] && return 0
-    [ "${HAMMER}" != "${STOP_RUN}" -a "${HAMMER}" != "${FORCED_UNLOCKING}" ] && {
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
-    }
-    return 0
-}
-
 set_lock() {
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 1
     echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
@@ -558,6 +549,15 @@ unset_lock() {
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
         rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
+}
+
+command_parsing() {
+    [ "${#PARAM_TOTAL}" = "0" ] && return 0
+    [ "${HAMMER}" != "${STOP_RUN}" -a "${HAMMER}" != "${FORCED_UNLOCKING}" ] && {
+    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    }
+    return 0
 }
 
 
