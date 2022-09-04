@@ -90,7 +90,7 @@ START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 HARDWARE_TYPE=$( uname -m )
 MATCH_SET='--match-set'
 
-# Commands
+# lzvpns script Commands
 HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
 STOP_RUN="stop"
 FORCED_UNLOCKING="unlock"
