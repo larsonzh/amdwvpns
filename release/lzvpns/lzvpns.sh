@@ -236,8 +236,10 @@ init_directory() {
 }
 
 clear_event_interface() {
-    [ -f "${PATH_BOOTLOADER}/${1}" ] && \
-        sed -i "/"${2}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
+    [ -z "$( grep "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null )" ] && return 2
+    sed -i "/"${2}"/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    return 0
 }
 
 check_file() {
@@ -252,8 +254,10 @@ check_file() {
     }
     if [ "$scripts_file_exist" = 1 ]; then
         clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
+        [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-        echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: Script files are located in the specified directory location. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -454,7 +458,7 @@ register_event_interface() {
     else
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_daemon
         clear_time_task
         clear_daemon "1"
@@ -484,9 +488,9 @@ init_service() {
 stop_service() {
     [ "${HAMMER}" != "stop" ] && return 1
     clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
