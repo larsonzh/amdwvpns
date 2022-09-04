@@ -112,7 +112,7 @@ do
 			sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
 	fi
 
-	[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && break
+	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && break
 
 	[ "${PPTPD_ENABLE}" != "1" -a "${IPSEC_SERVER_ENABLE}" != "1" ] && break
 
