@@ -40,9 +40,8 @@ get_transdata || {
 	VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 }
 
-PLTIME="${PLTIME}"
-[ "${1}" -gt 0 -a "${1}" -le 60 ] && PLTIME="${1}"
-PLTIME=$( echo "${PLTIME}" | sed 's/\(^.*$\)/\1s/g' )
+[ "${1}" -gt 0 -a "${1}" -le 60 ] && POLLING_TIME="${1}"
+POLLING_TIME="${POLLING_TIME}s"
 
 ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" nethash
 
@@ -53,8 +52,9 @@ while [ -n "$( ipset -q -n list "${VPN_DAEMON_IP_SET_LOCK}" )" ]
 do
 	if [ "${PPTPD_ENABLE}" = "1" ]; then
 		PPTPD_ENABLE="$( nvram get pptpd_enable)"
-		if [ "${PPTPD_ENABLE}" != "1" ]; then
-			sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+		if [ "${PPTPD_ENABLE}" != "1"  ]; then
+			[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+				sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
 		else
 			VPN_CLIENT=""
 			VPN_CLIENT_LIST=$( ip route list | grep pptp | awk '{print $1}' )
@@ -80,32 +80,41 @@ do
 					fi
 				fi
 				if [ -z "${VPN_CLIENT}" ]; then
-					sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+					[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+						sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
 				else
 					for VPN_CLIENT in $( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )
 					do
-						[ -z "$( echo "${VPN_CLIENT_LIST}" | grep "${VPN_CLIENT}" )" ] \
-							&& sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" \
-							&& break
+						if [ -z "$( echo "${VPN_CLIENT_LIST}" | grep "${VPN_CLIENT}" )" ]; then
+							[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+								sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+							break
+						fi
 					done
 				fi
 			else
-				[ -n "$( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )" ] \
-					&& sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+				if [ -n "$( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )" ]; then
+					[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+						sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+				fi
 			fi
 		fi
 	fi
 
 	if [ "${IPSEC_SERVER_ENABLE}" = "1" ]; then
 		IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
-		[ "${IPSEC_SERVER_ENABLE}" != "1" ] && sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+		if [ "${IPSEC_SERVER_ENABLE}" != "1" ]; then
+			[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+				sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+		fi
 	elif [ -n "$( ipset -q list $IPSEC_SUBNET_IP_SET | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )" ]; then
-		sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+		[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
+			sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
 	fi
 
 	[ "${PPTPD_ENABLE}" != "1" -a "${IPSEC_SERVER_ENABLE}" != "1" ] && break
 
-	eval sleep "${PLTIME}"
+	eval sleep "${POLLING_TIME}"
 done
 
 ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
