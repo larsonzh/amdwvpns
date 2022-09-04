@@ -545,6 +545,7 @@ forced_unlock() {
 }
 
 unset_lock() {
+    [ "${HAMMER}" = "error" ] && return
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
         rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
@@ -554,6 +555,7 @@ unset_lock() {
 command_parsing() {
     [ "${PARAM_TOTAL}" = "0" ] && return 0
     [ "${HAMMER}" != "${STOP_RUN}" -a "${HAMMER}" != "${FORCED_UNLOCKING}" ] && {
+        HAMMER="error"
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     }
