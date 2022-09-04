@@ -517,7 +517,8 @@ set_lock() {
     exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
     sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
     if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
-        [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
+        local curstance="$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )"
+        [ "${curstance}" = "lzvpns_${HAMMER}" ] && {
             [ "${2}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service is being started by another instance.
             return 1
         }
@@ -526,7 +527,7 @@ set_lock() {
 }
 
 unset_lock() {
-    [ $( cat "${INSTANCE_LIST}" 2> /dev/null | grep -c 'lzvpns_' ) -le 0 ] && \
+    [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
         rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
