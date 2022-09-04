@@ -96,6 +96,8 @@ HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
 STOP_RUN="stop"
 FORCED_UNLOCKING="unlock"
 
+PARAM_TOTAL="${#}"
+
 PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
 LOCK_FILE_ID=555
@@ -516,6 +518,11 @@ start_service() {
 }
 
 command_parsing() {
+    [ "${#PARAM_TOTAL}" = "0" ] && return 0
+    [ "${HAMMER}" != "${STOP_RUN}" -a "${HAMMER}" != "${FORCED_UNLOCKING}" ] && {
+    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    }
     return 0
 }
 
@@ -562,6 +569,7 @@ echo $(lzdate) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /d
 
 while ture
 do
+    command_parsing || break
     set_lock || break
     init_service || break
     stop_service && break
