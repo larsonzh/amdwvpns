@@ -99,6 +99,8 @@ LOCK_FILE_ID=555
 
 # ------------------ Function -------------------
 
+lzdate() { echo "$( date +"%F %T" )"; }
+
 cleaning_user_data() {
     [ "${1}" != "1" ] && {
         local str="Primary WAN *"
@@ -512,8 +514,6 @@ start_service() {
 
 [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
 exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
-
-lzdate() { echo "$( date +"%F %T" )"; }
 
 echo $(lzdate) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
