@@ -82,9 +82,6 @@ IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
 # VPN daemon startup script
 VPN_DAEMON_START_SCRIPT="lzvpns_start_daemon.sh"
 
-# VPN daemon lock
-VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
-
 # Start VPN daemon time task ID
 START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 
@@ -128,11 +125,10 @@ cleaning_user_data() {
 
 clear_daemon() {
     local buffer="$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' )"
-    [ -z "$( echo "${buffer}" )" -a -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
+    [ -z "$( echo "${buffer}" )" )" ] && {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
-    ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
     echo "${buffer}" | xargs kill -9 > /dev/null 2>&1
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: The running VPN daemon of this script in the system has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
@@ -309,11 +305,11 @@ consistency_update() {
 }
 
 update_data() {
-    local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}""
+    local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}">"
     consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
     [ "${?}" = "1" ] && return 1
 
-    transdata=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${VPN_DAEMON_IP_SET_LOCK}""
+    transdata=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"
     consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"
     [ "${?}" = "1" ] && return 1
 
@@ -389,7 +385,6 @@ craeate_daemon_start_scripts() {
 [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
 exec $LOCK_FILE_ID<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
-ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
 ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
 nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
 sleep 1s
