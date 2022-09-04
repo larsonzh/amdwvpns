@@ -423,11 +423,9 @@ start_daemon() {
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 
     if [ -n "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
-            echo $(lzdate) [$$]: ---------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo $(lzdate) [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ -n "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ]; then
-            echo $(lzdate) [$$]: ---------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-            echo $(lzdate) [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG}" 2> /dev/null
+        echo $(lzdate) [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
 
@@ -565,8 +563,10 @@ command_parsing() {
 # -------------- Script Execution ---------------
 
 echo $(lzdate) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+echo $(lzdate) [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev/null
+echo $(lzdate) [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 
 while ture
 do
@@ -580,6 +580,7 @@ done
 
 unset_lock
 
+echo $(lzdate) [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 
