@@ -311,13 +311,20 @@ set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" != "0" -a "{$WAN_ACCESS_PORT}" != "1" ] && return
     local router_local_ip="$( echo $( ifconfig br0 2> /dev/null ) | awk '{print $7}' | awk -F: '{print $2}' )"
     [ -z "${router_local_ip}" ] && {
-        echo $(lzdate) [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 0
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
     }
     local access_wan="${WAN0}"
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan="${WAN1}"
     ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
+    [ -n "$( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' | grep "${IP_RULE_PRIO_HOST}" )" \
+    -a -n "( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' | grep "${IP_RULE_PRIO_HOST}" )" ] \
+    && [ "${1}" != "1" ] && echo $(lzdate) [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null \
+    || {
+        [ "${1}" != "1" ] &&  echo $(lzdate) [$$]: WAN access port configuration failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    }
     return 0
 }
 
