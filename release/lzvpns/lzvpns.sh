@@ -515,17 +515,12 @@ start_service() {
     return 0
 }
 
+command_parsing() {
+    return 0
+}
+
 set_lock() {
-    if [ "${HAMMER}" = "${FORCED_UNLOCKING}" ]; then
-        rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
-        if [ -f "${LOCK_FILE}" ]; then
-            rm -rf "${LOCK_FILE}" > /dev/null 2>&1
-            [ "${2}" != "1" ] && echo $(lzdate) [$$]: Program synchronization lock has been successfully unlocked.
-        else
-            [ "${2}" != "1" ] && echo $(lzdate) [$$]: There is no program synchronization lock.
-        fi
-        return 1
-    fi
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 1
     echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
     exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
@@ -533,15 +528,26 @@ set_lock() {
     if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
         local curstance="$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )"
         [ "${curstance}" = "lzvpns_${HAMMER}" ] && {
-            [ "${2}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service is being started by another instance.
+            [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service is being started by another instance.
             return 1
         }
     fi
     return 0
 }
 
+forced_unlock() {
+    rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
+    if [ -f "${LOCK_FILE}" ]; then
+        rm -rf "${LOCK_FILE}" > /dev/null 2>&1
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Program synchronization lock has been successfully unlocked.
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: There is no program synchronization lock.
+    fi
+    return 0
+}
+
 unset_lock() {
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
         rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
