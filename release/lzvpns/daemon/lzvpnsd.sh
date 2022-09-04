@@ -43,7 +43,7 @@ get_transdata || {
 [ "${1}" -gt 0 -a "${1}" -le 60 ] && POLLING_TIME="${1}"
 POLLING_TIME="${POLLING_TIME}s"
 
-ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" nethash
+ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" list:set
 
 PPTPD_ENABLE="$( nvram get pptpd_enable)"
 IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
