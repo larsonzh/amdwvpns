@@ -516,6 +516,13 @@ start_service() {
 
 set_lock() {
     if [ "${HAMMER}" = "${FORCED_UNLOCKING}" ]; then
+        rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
+        if [ -f "${LOCK_FILE}" ]; then
+            rm -rf "${LOCK_FILE}" > /dev/null 2>&1
+            [ "${2}" != "1" ] && echo $(lzdate) [$$]: Program synchronization lock has been successfully unlocked.
+        else
+            [ "${2}" != "1" ] && echo $(lzdate) [$$]: There is no program synchronization lock.
+        fi
         return 1
     fi
     echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
