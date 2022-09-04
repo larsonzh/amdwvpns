@@ -424,7 +424,7 @@ create_event_interface() {
 #!/bin/sh
 EOF_INTERFACE
     fi
-    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return
+    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
     if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
         sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     else
@@ -436,13 +436,25 @@ EOF_INTERFACE
         sed -i "\$a "${2}/${3}" # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ] && return 1
+    return 0
 }
 
 register_event_interface() {
     create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: VPN event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    fi
     create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    [ "${1}" != "1" ] && echo $(lzdate) [$$]: Registration script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    if [ "${?}" = "0" ]; then
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: The script boot start event interface has been successfully registered. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        return 1
+    fi
 }
 
 init_service() {
@@ -475,7 +487,7 @@ start_service() {
     set_balance_chain
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     start_daemon
-    register_event_interface
+    register_event_interface || return 1
     return 0
 }
 
