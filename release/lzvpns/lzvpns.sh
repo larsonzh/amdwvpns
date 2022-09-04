@@ -92,9 +92,10 @@ MATCH_SET='--match-set'
 
 HAMMER="$( echo "${1}" | tr [:upper:] [:lower:] )"
 
-PATH_LOCK=/var/lock
-LOCK_FILE=${PATH_LOCK}/lz_rule.lock
+PATH_LOCK="/var/lock"
+LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
 LOCK_FILE_ID=555
+INSTANCE_LIST="${PATH_LOCK}/lzvpns_instance.lock"
 
 
 # ------------------ Function -------------------
@@ -510,11 +511,27 @@ start_service() {
     return 0
 }
 
+set_lock() {
+    echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
+    [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
+    exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
+    sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
+    [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && return 0
+    [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
+        [ "${2}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service is being started by another instance.
+        return 1
+    }
+    return 0
+}
+
+unset_lock() {
+    [ $( cat "${INSTANCE_LIST}" 2> /dev/null | grep -c 'lzvpns_' ) -le 0 ] && \
+        rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
+    flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
+}
+
 
 # -------------- Script Execution ---------------
-
-[ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
-exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
 echo $(lzdate) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
@@ -522,16 +539,17 @@ echo $(lzdate) [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /d
 
 while ture
 do
+    set_lock || break
     init_service || break
     stop_service && break
     start_service
     break
 done
 
+unset_lock
+
 echo $(lzdate) [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
 echo $(lzdate) [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
-
-flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 
 exit 0
 
