@@ -269,13 +269,13 @@ delete_data_file() {
         rm -rf "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN event data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN event data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
         rm -rf "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
 
