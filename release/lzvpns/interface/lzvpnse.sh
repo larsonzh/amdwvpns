@@ -11,6 +11,10 @@ PATH_TMP="${0%/*}"
 PATH_TMP="${PATH_TMP%/*}/tmp"
 VPN_DATA_FILE="lzvpnsd.dat"
 
+PATH_LOCK="/var/lock"
+LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
+LOCK_FILE_ID=555
+
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>"
 # -----------------------------------------------
