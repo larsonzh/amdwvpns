@@ -7,9 +7,7 @@
 # BEIGIN
 
 # ------------- Data Exchange Area --------------
-# ---------- Don't manually modify !!! ----------
 TRANSDATA=">>>>>>>>"
-# ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
 
 get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
