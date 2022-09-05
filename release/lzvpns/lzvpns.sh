@@ -249,21 +249,6 @@ init_directory() {
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: The application directory for this script has been reinitialized. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
-delete_data_file() {
-    if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
-        rm -rf "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN event data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-    if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
-        rm -rf "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-    else
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
-    fi
-}
-
 clear_event_interface() {
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
     [ -z "$( grep "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null )" ] && return 2
@@ -277,6 +262,21 @@ clear_all_event_interface() {
     clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
     [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
+}
+
+delete_data_file() {
+    if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
+        rm -rf "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN event data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
+        rm -rf "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 }
 
 check_file() {
