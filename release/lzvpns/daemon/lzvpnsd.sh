@@ -10,6 +10,7 @@ PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
 PATH_TMP="${PATH_INTERFACE%/*}/tmp"
 PATH_INTERFACE="${PATH_INTERFACE%/*}/interface"
+VPN_DAEMON_DATA_FILE="lzvpnsd.dat"
 
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>"
@@ -18,6 +19,7 @@ TRANSDATA=">>>>>>>>"
 get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
 
 get_transdata() {
+	[ "${TRANSDATA}" ] || return 1
 	[ -n "$( echo "${TRANSDATA}" | grep -E '^[>]|[>][>]' )" ] && return 1
 	POLLING_TIME="$( get_trsta "1" )"
 	WAN0="$( get_trsta "2" )"
@@ -29,7 +31,29 @@ get_transdata() {
 	return 0
 }
 
-get_transdata || {
+get_exta() { echo "$( echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}' )"; }
+
+get_exdata() {
+	[ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && return 1
+	local data_buf="$( cat "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" 2> /dev/null | sed 's/[ ]//g' )"
+	[ "${data_buf}" ] || return 1
+	POLLING_TIME="$( get_exta "${data_buf}" "1" )"
+	WAN0="$( get_exta "${data_buf}" "2" )"
+	WAN1="$( get_exta "${data_buf}" "3" )"
+	VPN_EVENT_INTERFACE_SCRIPTS="$( get_exta "${data_buf}" "4" )"
+	PPTP_CLIENT_IP_SET="$( get_exta "${data_buf}" "5" )"
+	IPSEC_SUBNET_IP_SET="$( get_exta "${data_buf}" "6" )"
+	VPN_DAEMON_IP_SET_LOCK="$( get_exta "${data_buf}" "7" )"
+	return 0
+}
+
+get_data() {
+	get_exdata && return 0
+	get_transdata && return 0
+	return 1
+}
+
+get_data || {
 	POLLING_TIME=5
 	WAN0=100
 	WAN1=200
