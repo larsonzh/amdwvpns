@@ -19,7 +19,7 @@ TRANSDATA=">>>>>>>>"
 get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
 
 get_transdata() {
-	[ "${TRANSDATA}" ] || return 1
+    [ "${TRANSDATA}" ] || return 1
 	[ -n "$( echo "${TRANSDATA}" | grep -E '^[>]|[>][>]' )" ] && return 1
 	POLLING_TIME="$( get_trsta "1" )"
 	WAN0="$( get_trsta "2" )"
