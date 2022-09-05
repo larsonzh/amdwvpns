@@ -63,7 +63,7 @@ get_data || {
 	VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 }
 
-[ "${1}" -gt 0 -a "${1}" -le 60 ] && POLLING_TIME="${1}"
+[ "${1}" -gt "0" ] && [ "${1}" -le "60" ] && POLLING_TIME="${1}"
 POLLING_TIME="${POLLING_TIME}s"
 
 ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" list:set
@@ -137,7 +137,7 @@ do
 			sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
 	fi
 
-	[ "${PPTPD_ENABLE}" != "1" -a "${IPSEC_SERVER_ENABLE}" != "1" ] && break
+	[ "${PPTPD_ENABLE}" != "1" ] && [ "${IPSEC_SERVER_ENABLE}" != "1" ] && break
 
 	eval sleep "${POLLING_TIME}"
 done
