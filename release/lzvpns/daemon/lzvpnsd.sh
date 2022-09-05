@@ -35,7 +35,7 @@ get_exta() { echo "$( echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}' )"; }
 
 get_exdata() {
 	[ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && return 1
-	local data_buf="$( cat "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" 2> /dev/null | sed 's/[ ]//g' )"
+	local data_buf="$( cat "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" 2> /dev/null )"
 	[ "${data_buf}" ] || return 1
 	POLLING_TIME="$( get_exta "${data_buf}" "1" )"
 	WAN0="$( get_exta "${data_buf}" "2" )"
