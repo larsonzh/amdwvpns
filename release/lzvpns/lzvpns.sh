@@ -226,7 +226,7 @@ restore_balance_chain() {
 }
 
 clear_ipsets() {
-    [ -z "$( ipset -q -L -n "${OVPN_SUBNET_IP_SET}" -a -z "$( ipset -q -L -n "${PPTP_CLIENT_IP_SET}" -a -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" ] {
+    [ -z "$( ipset -q -L -n "${OVPN_SUBNET_IP_SET}" )" -a -z "$( ipset -q -L -n "${PPTP_CLIENT_IP_SET}" )" -a -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" )" ] && {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: None of VPN data set of this script residing in the system memory. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
