@@ -68,15 +68,15 @@ POLLING_TIME="${POLLING_TIME}s"
 
 ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" list:set
 
-PPTPD_ENABLE="$( nvram get pptpd_enable)"
-IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
+PPTPD_ENABLE="$( nvram get pptpd_enable )"
+IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
 
 while [ -n "$( ipset -q -n list "${VPN_DAEMON_IP_SET_LOCK}" )" ]
 do
 	[ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && break
 
 	if [ "${PPTPD_ENABLE}" = "1" ]; then
-		PPTPD_ENABLE="$( nvram get pptpd_enable)"
+		PPTPD_ENABLE="$( nvram get pptpd_enable )"
 		if [ "${PPTPD_ENABLE}" != "1"  ]; then
 			[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
 				sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
@@ -127,7 +127,7 @@ do
 	fi
 
 	if [ "${IPSEC_SERVER_ENABLE}" = "1" ]; then
-		IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable)"
+		IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
 		if [ "${IPSEC_SERVER_ENABLE}" != "1" ]; then
 			[ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
 				sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
