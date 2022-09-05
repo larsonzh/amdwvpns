@@ -57,9 +57,18 @@ get_data() {
 	return 1
 }
 
+set_lock() {
+    [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
+    exec 555<>"${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
+}
+
+unset_lock() {
+    flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
+}
 
 lzdate() { echo "$( date +"%F %T" )"; }
 
+set_lock
 
 get_data || {
     VPN_WAN_PORT=0
@@ -72,6 +81,8 @@ get_data || {
     SYSLOG="/tmp/syslog.log"
 }
 
+unset_lock
 
+exit 0
 
 # END
