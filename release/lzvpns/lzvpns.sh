@@ -323,10 +323,10 @@ trans_event_data() {
 "${WAN0}"
 "${WAN1}"
 "${IP_RULE_PRIO_VPN}"
-"${OVPN_SUBNET_IP_SET}"
-"${PPTP_CLIENT_IP_SET}"
-"${IPSEC_SUBNET_IP_SET}"
-"${SYSLOG}"
+\""${OVPN_SUBNET_IP_SET}"\"
+\""${PPTP_CLIENT_IP_SET}"\"
+\""${IPSEC_SUBNET_IP_SET}"\"
+\""${SYSLOG}"\"
 EOF_EVENT_DATA
     [ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -341,10 +341,10 @@ trans_daemon_data() {
 "${POLLING_TIME}"
 "${WAN0}"
 "${WAN1}"
-"${VPN_EVENT_INTERFACE_SCRIPTS}"
-"${PPTP_CLIENT_IP_SET}"
-"${IPSEC_SUBNET_IP_SET}"
-"${VPN_DAEMON_IP_SET_LOCK}"
+\""${VPN_EVENT_INTERFACE_SCRIPTS}"\"
+\""${PPTP_CLIENT_IP_SET}"\"
+\""${IPSEC_SUBNET_IP_SET}"\"
+\""${VPN_DAEMON_IP_SET_LOCK}"\"
 EOF_DAEMON_DATA
     [ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -356,10 +356,10 @@ EOF_DAEMON_DATA
 
 update_data() {
     if [ "${1}" = "1" ]; then
-        local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}">"
+        local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">\""${OVPN_SUBNET_IP_SET}"\">\""${PPTP_CLIENT_IP_SET}"\">\""${IPSEC_SUBNET_IP_SET}"\">\""${SYSLOG}"\">"
         consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
         [ "${?}" = "1" ] && clear_all_event_interface && return 1
-        transdata=""${POLLING_TIME}">"${WAN0}">"${WAN1}">"${VPN_EVENT_INTERFACE_SCRIPTS}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${VPN_DAEMON_IP_SET_LOCK}">"
+        transdata=""${POLLING_TIME}">"${WAN0}">"${WAN1}">\""${VPN_EVENT_INTERFACE_SCRIPTS}"\">\""${PPTP_CLIENT_IP_SET}"\">\""${IPSEC_SUBNET_IP_SET}"\">\""${VPN_DAEMON_IP_SET_LOCK}"\">"
         consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"
         [ "${?}" = "1" ] && clear_all_event_interface && return 1
     else
