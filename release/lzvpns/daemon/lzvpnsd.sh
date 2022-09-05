@@ -12,9 +12,7 @@ PATH_TMP="${PATH_INTERFACE%/*}/tmp"
 PATH_INTERFACE="${PATH_INTERFACE%/*}/interface"
 
 # ------------- Data Exchange Area --------------
-# ---------- Don't manually modify !!! ----------
 TRANSDATA=">>>>>>>>"
-# ---------- Don't manually modify !!! ----------
 # -----------------------------------------------
 
 get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
