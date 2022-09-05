@@ -107,6 +107,7 @@ LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
 LOCK_FILE_ID=555
 INSTANCE_LIST="${PATH_LOCK}/lzvpns_instance.lock"
 
+TRANSDATA=0
 
 # ------------------ Function -------------------
 
@@ -355,7 +356,7 @@ EOF_DAEMON_DATA
 }
 
 update_data() {
-    if [ "${1}" = "1" ]; then
+    if [ "${TRANSDATA}" = "1" ]; then
         local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}">"
         consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
         [ "${?}" = "1" ] && clear_all_event_interface && return 1
