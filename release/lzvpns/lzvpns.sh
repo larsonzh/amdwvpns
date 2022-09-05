@@ -335,7 +335,7 @@ consistency_update() {
 }
 
 trans_event_data() {
-    cat > "${PATH_TMP}/${VPN_DATA_FILE}" <<EOF_EVENT_DATA
+    cat > "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null <<EOF_EVENT_DATA
 "${VPN_WAN_PORT}"
 "${WAN0}"
 "${WAN1}"
@@ -354,7 +354,7 @@ EOF_EVENT_DATA
 }
 
 trans_daemon_data() {
-    cat > "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" <<EOF_DAEMON_DATA
+    cat > "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" 2> /dev/null <<EOF_DAEMON_DATA
 "${POLLING_TIME}"
 "${WAN0}"
 "${WAN1}"
@@ -449,7 +449,7 @@ set_balance_chain() {
 }
 
 craeate_daemon_start_scripts() {
-    cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" <<EOF_START_DAEMON_SCRIPT
+    cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" 2> /dev/null <<EOF_START_DAEMON_SCRIPT
 # ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
 # By LZ (larsonzhang@gmail.com)
 # Do not manually modify!!!
@@ -500,7 +500,7 @@ start_daemon() {
 create_event_interface() {
     [ ! -d "${PATH_BOOTLOADER}" ] && mkdir -p "${PATH_BOOTLOADER}" > /dev/null 2>&1
     if [ ! -f "${PATH_BOOTLOADER}/${1}" ]; then
-        cat > "${PATH_BOOTLOADER}/${1}" <<EOF_INTERFACE
+        cat > "${PATH_BOOTLOADER}/${1}" 2> /dev/null <<EOF_INTERFACE
 #!/bin/sh
 EOF_INTERFACE
     fi
