@@ -53,6 +53,10 @@ VPN_DAEMON_SCRIPTS="lzvpnsd.sh"
 BOOTLOADER_FILE="firewall-start"
 VPN_EVENT_FILE="openvpn-event"
 
+# Data exchange file
+VPN_DATA_FILE="lzvpnse.dat"
+VPN_DAEMON_DATA_FILE="lzvpnsd.dat"
+
 # Project file deployment path
 PATH_BOOTLOADER="/jffs/scripts"
 PATH_LZ="${0%/*}"
