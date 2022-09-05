@@ -317,6 +317,35 @@ consistency_update() {
     return 0
 }
 
+trans_event_data() {
+    cat > "${PATH_TMP}/${VPN_DATA_FILE}" <<EOF_EVENT_DATA
+"${VPN_WAN_PORT}"
+"${WAN0}"
+"${WAN1}"
+"${IP_RULE_PRIO_VPN}"
+"${OVPN_SUBNET_IP_SET}"
+"${PPTP_CLIENT_IP_SET}"
+"${IPSEC_SUBNET_IP_SET}"
+"${SYSLOG}"
+EOF_EVENT_DATA
+    [ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && return 1
+    return 0
+}
+
+trans_daemon_data() {
+    cat > "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" <<EOF_DAEMON_DATA
+"${POLLING_TIME}"
+"${WAN0}"
+"${WAN1}"
+"${VPN_EVENT_INTERFACE_SCRIPTS}"
+"${PPTP_CLIENT_IP_SET}"
+"${IPSEC_SUBNET_IP_SET}"
+"${VPN_DAEMON_IP_SET_LOCK}"
+EOF_DAEMON_DATA
+    [ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && return 1
+    return 0
+}
+
 update_data() {
     local transdata=""${VPN_WAN_PORT}">"${WAN0}">"${WAN1}">"${IP_RULE_PRIO_VPN}">"${OVPN_SUBNET_IP_SET}">"${PPTP_CLIENT_IP_SET}">"${IPSEC_SUBNET_IP_SET}">"${SYSLOG}">"
     consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
