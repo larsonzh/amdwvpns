@@ -249,6 +249,21 @@ init_directory() {
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: The application directory for this script has been reinitialized. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
+delete_data_file() {
+    if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
+        rm -rf "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN event data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
+        rm -rf "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: No VPN daemon data exchange file can be deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+}
+
 clear_event_interface() {
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
     [ -z "$( grep "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null )" ] && return 2
@@ -504,12 +519,25 @@ EOF_INTERFACE
     return 0
 }
 
+register_event_interface_error() {
+    clear_daemon
+    clear_time_task
+    clear_daemon "1"
+    restore_ip_rules
+    restore_routing_table
+    restore_balance_chain
+    clear_ipsets
+    delete_data_file
+}
+
 register_event_interface() {
     create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
     if [ "${?}" = "0" ]; then
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: The script boot start event interface has been successfully registered. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        register_event_interface_error
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
     create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
@@ -519,14 +547,8 @@ register_event_interface() {
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: VPN event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
         [ "${?}" = "0" -a "${1}" != "1" ] && echo $(lzdate) [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
-        clear_daemon
-        clear_time_task
-        clear_daemon "1"
-        restore_ip_rules
-        restore_routing_table
-        restore_balance_chain
-        clear_ipsets
-        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
+        register_event_interface_error
+        [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
     return 0
@@ -564,6 +586,7 @@ init_service() {
     restore_balance_chain
     clear_ipsets
     init_directory
+    delete_data_file
     check_file || return 1
     return 0
 }
