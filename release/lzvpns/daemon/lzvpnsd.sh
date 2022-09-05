@@ -8,7 +8,8 @@
 
 PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
-PATH_INTERFACE=“${PATH_INTERFACE%/*}/interface”
+PATH_TMP="${PATH_INTERFACE%/*}/tmp"
+PATH_INTERFACE="${PATH_INTERFACE%/*}/interface"
 
 # ------------- Data Exchange Area --------------
 # ---------- Don't manually modify !!! ----------
