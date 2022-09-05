@@ -291,6 +291,7 @@ check_file() {
     }
     if [ "$scripts_file_exist" = 1 ]; then
         clear_all_event_interface
+        delete_data_file
         [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
@@ -586,7 +587,6 @@ init_service() {
     restore_balance_chain
     clear_ipsets
     init_directory
-    delete_data_file
     check_file || return 1
     return 0
 }
@@ -594,6 +594,7 @@ init_service() {
 stop_service() {
     [ "${HAMMER}" != "${STOP_RUN}" ] && return 1
     clear_all_event_interface
+    delete_data_file
     [ "${1}" != "1" ] && echo $(lzdate) [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
