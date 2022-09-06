@@ -92,9 +92,6 @@ VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 # Start VPN daemon time task ID
 START_DAEMON_TIMEER_ID="lzvpns_start_daemon_id"
 
-HARDWARE_TYPE=$( uname -m )
-MATCH_SET='--match-set'
-
 # Script Commands
 HAMMER="$( echo "${1}" | tr '[:A-Z:]' '[:a-z:]' )"
 STOP_RUN="stop"
@@ -403,44 +400,6 @@ set_wan_access_port() {
     return 0
 }
 
-create_vpn_ipsets() {
-    ipset -! create "${OVPN_SUBNET_IP_SET}" nethash; ipset -q flush "${OVPN_SUBNET_IP_SET}";
-    ipset -! create "${PPTP_CLIENT_IP_SET}" nethash; ipset -q flush "${PPTP_CLIENT_IP_SET}";
-    ipset -! create "${IPSEC_SUBNET_IP_SET}" nethash; ipset -q flush "${IPSEC_SUBNET_IP_SET}";
-}
-
-get_match_set() {
-    case ${HARDWARE_TYPE} in
-        armv7l)
-            MATCH_SET='--match-set'
-        ;;
-        mips)
-            MATCH_SET='--set'
-        ;;
-        aarch64)
-            MATCH_SET='--match-set'
-        ;;
-        *)
-            MATCH_SET='--match-set'
-        ;;
-    esac
-    echo "${MATCH_SET}"
-}
-
-set_balance_chain() {
-    ! iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return
-    create_vpn_ipsets
-    get_match_set
-    iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
-    iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" dst -j RETURN > /dev/null 2>&1
-    iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
-    if [ "${VPN_WAN_PORT}" = 0 ] || [ "${VPN_WAN_PORT}" = 1 ]; then
-        iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
-        iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" src -j RETURN > /dev/null 2>&1
-        iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
-    fi
-}
-
 craeate_daemon_start_scripts() {
     cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" 2> /dev/null <<EOF_START_DAEMON_SCRIPT
 # ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
@@ -593,7 +552,6 @@ start_service() {
     update_data || return 1
     detect_dual_wan || return 1
     set_wan_access_port
-    set_balance_chain
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     start_daemon
     register_event_interface || return 1
