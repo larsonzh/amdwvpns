@@ -91,13 +91,6 @@ detect_dual_wan() {
     return 1
 }
 
-clear_ipsets() {
-    ipset -q destroy "${OVPN_SUBNET_IP_SET}"
-    ipset -q destroy "${PPTP_CLIENT_IP_SET}"
-    ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
-    return 0
-}
-
 get_route_list() {
     ROUTE_LIST="$( ip route list | grep -Ev 'default|nexthop' )"
     [ -n "${ROUTE_LIST}" ] && return 0
@@ -134,6 +127,13 @@ set_vpn_rule() {
 
 get_balance_chain() {
     iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
+}
+
+clear_ipsets() {
+    ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+    ipset -q destroy "${PPTP_CLIENT_IP_SET}"
+    ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
+    return 0
 }
 
 create_vpn_ipsets_item() {
