@@ -153,7 +153,7 @@ clear_time_task() {
 
 delte_ip_rules() {
     local buffer="$( ip rule list | grep -wo "^${1}" )"
-    [ -z "$( echo "${buffer}" )" ] && return 1
+    [ -z "${buffer}" ] && return 1
     echo "${buffer}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
     return 0
