@@ -111,7 +111,7 @@ TRANSFER=0
 
 # ------------------ Function -------------------
 
-lzdate() { echo "$( date +"%F %T" )"; }
+lzdate() { eval echo "$( date +"%F %T" )"; }
 
 cleaning_user_data() {
     local str="Primary WAN *"
