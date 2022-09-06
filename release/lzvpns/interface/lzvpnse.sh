@@ -16,6 +16,8 @@ LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 
 ROUTE_LIST=
+ROUTE_VPN_LIST=
+IPSEC_SUBNET_LIST=
 BALANCE_CHAIN=0
 OVPN_SERVER_ENABLE=0
 PPTPD_ENABLE=0
@@ -107,10 +109,16 @@ get_route_list() {
     return 1
 }
 
+get_ipsec_subnet_list() {
+    IPSEC_SUBNET_LIST=$( nvram get ipsec_profile_1 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )
+    [ -z "${IPSEC_SUBNET_LIST}" ] && IPSEC_SUBNET_LIST=$( nvram get ipsec_profile_2 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )
+}
+
 get_vpn_server() {
     echo "${ROUTE_LIST}" | grep -qE 'tun|tap' && OVPN_SERVER_ENABLE=1 || OVPN_SERVER_ENABLE=0
     PPTPD_ENABLE="$( nvram get pptpd_enable )"
     IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
+    [ "${IPSEC_SERVER_ENABLE}" = "1" ] && get_ipsec_subnet_list
 }
 
 create_vpn_ipsets_item() {
@@ -186,6 +194,20 @@ set_balance_chain() {
     return 0
 }
 
+set_sub_route() {
+    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN0}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN1}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    ROUTE_VPN_LIST="$( echo "${ROUTE_LIST}" | grep -E 'pptp|tun|tap' | awk '{print $1}' )"
+}
+
+set_vpn_rule() {
+    local vpn_wan=
+    [ "${VPN_WAN_PORT}" = "0" ] && vpn_wan="${WAN0}"
+    [ "${VPN_WAN_PORT}" = "1" ] && vpn_wan="${WAN1}"
+    [ -z "${vpn_wan}" ] && return
+    echo "${ROUTE_VPN_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
+}
 
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
@@ -216,6 +238,8 @@ do
     get_vpn_server
     create_vpn_ipsets
     set_balance_chain
+    set_sub_route
+    set_vpn_rule
 done
 
 
