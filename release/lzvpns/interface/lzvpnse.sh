@@ -89,7 +89,7 @@ detect_dual_wan() {
     return 1
 }
 
-get_balance_chain_status() {
+get_balance_chain() {
     iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
 }
 
@@ -107,7 +107,7 @@ get_route_list() {
     return 1
 }
 
-get_vpn_server_status() {
+get_vpn_server() {
     echo "${ROUTE_LIST}" | grep -qE 'tun|tap' && OVPN_SERVER_ENABLE=1 || OVPN_SERVER_ENABLE=0
     PPTPD_ENABLE="$( nvram get pptpd_enable )"
     IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
@@ -212,8 +212,8 @@ do
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
     detect_dual_wan || break
     get_route_list || break
-    get_balance_chain_status
-    get_vpn_server_status
+    get_balance_chain
+    get_vpn_server
     create_vpn_ipsets
     set_balance_chain
 done
