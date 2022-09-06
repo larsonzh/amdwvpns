@@ -6,6 +6,9 @@
 
 # BEIGIN
 
+
+# --------------- Global Variable ---------------
+
 PATH_INTERFACE="${0%/*}"
 [ "${PATH_INTERFACE:0:1}" != '/' ] && PATH_INTERFACE="$( pwd )${PATH_INTERFACE#*.}"
 PATH_TMP="${PATH_INTERFACE%/*}/tmp"
@@ -15,6 +18,9 @@ VPN_DAEMON_DATA_FILE="lzvpnsd.dat"
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
 # -----------------------------------------------
+
+
+# ------------------ Function -------------------
 
 get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
 
@@ -52,6 +58,9 @@ get_data() {
     get_transdata && return 0
     return 1
 }
+
+
+# -------------- Script Execution ---------------
 
 get_data || {
     POLLING_TIME=3
