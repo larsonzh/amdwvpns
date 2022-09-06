@@ -83,6 +83,8 @@ unset_lock() {
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
+lzdate() { eval echo "$( date +"%F %T" )"; }
+
 delte_vpn_rules() {
     ip rule list | grep -wo "^${IP_RULE_PRIO_VPN}:" | awk -F: '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
@@ -232,8 +234,39 @@ set_balance_rule() {
     clear_invalid_ipsets
 }
 
-lzdate() { eval echo "$( date +"%F %T" )"; }
-
+status_output() {
+    local vpn_item=
+	local index="0"
+	for vpn_item in $( echo "${ROUTE_LIST}" | grep -E 'tun|tap' | awk '{print $1":"$3}' )
+	do
+		let index++
+		echo "$(lzdate)" [$$]: OpenVPN Subnet "${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
+	done
+	[ "${index}" = "0" ] && echo "$(lzdate)" [$$]: OpenVPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+	index="0"
+	for vpn_item in $( echo "${ROUTE_LIST}" | grep pptp | awk '{print $1":"$3}' )
+	do
+		let index++
+		echo "$(lzdate)" [$$]: PPTP Client "${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
+	done
+	if [ "${index}" = "0" ]; then
+		if [ "${PPTPD_ENABLE}" != "1" ]; then
+			echo "$(lzdate)" [$$]: PPTP VPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+		else
+			echo "$(lzdate)" [$$]: PPTP VPN Client: None | tee -ai "${SYSLOG}" 2> /dev/null
+		fi
+	fi
+	if [ -n "${IPSEC_SUBNET_IP_SET}" ]; then
+		index="0"
+		for vpn_item in $( echo "${IPSEC_SUBNET_IP_SET}" | awk '{print $1":ipsec"}' )
+		do
+			let index++
+			echo "$(lzdate)" [$$]: IPSec VPN Subnet "${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
+		done
+	else
+		echo "$(lzdate)" [$$]: IPSec VPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+	fi
+}
 
 # -------------- Script Execution ---------------
 
@@ -263,6 +296,7 @@ do
     set_sub_route
     set_vpn_rule
     set_balance_rule
+    status_output
 done
 
 unset_lock
