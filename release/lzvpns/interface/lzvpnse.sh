@@ -18,7 +18,6 @@ LOCK_FILE_ID=555
 ROUTE_LIST=
 ROUTE_VPN_LIST=
 IPSEC_SUBNET_LIST=
-BALANCE_CHAIN=0
 OVPN_SERVER_ENABLE=0
 PPTPD_ENABLE=0
 IPSEC_SERVER_ENABLE=0
@@ -125,10 +124,6 @@ set_vpn_rule() {
     echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
 }
 
-get_balance_chain() {
-    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
-}
-
 clear_ipsets() {
     ipset -q destroy "${OVPN_SUBNET_IP_SET}"
     ipset -q destroy "${PPTP_CLIENT_IP_SET}"
@@ -136,20 +131,19 @@ clear_ipsets() {
     return 0
 }
 
+get_balance_chain() {
+    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return 0 || return 1
+}
+
 create_vpn_ipsets_item() {
-    if [ "${1}" = "1" ]; then
-        ipset -! create "${2}" nethash; ipset -q flush "${2}";
-    elif [ -n "$( ipset -q -n list "${2}" )" ]; then
-        ipset -q destroy "${2}"
-    fi
+    [ "${1}" != "1" ] && return
+     ipset -! create "${2}" nethash; ipset -q flush "${2}";
 }
 
 create_vpn_ipsets() {
-    [ "${BALANCE_CHAIN}" != "1" ] && clear_ipsets && return
     create_vpn_ipsets_item "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
     create_vpn_ipsets_item "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
     create_vpn_ipsets_item "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
-    return
 }
 
 get_match_set() {
@@ -201,15 +195,33 @@ set_balance_items() {
 }
 
 set_balance_chain() {
-    [ "${BALANCE_CHAIN}" != "1" ] && return
     get_match_set
     set_balance_items "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
     set_balance_items "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
     set_balance_items "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
 }
 
+add_vpn_ipsets() {
+    echo "${ROUTE_LIST}" | grep -E 'tun|tap' | awk '{print $1}' | sed "s/^.*$/-! add ${OVPN_SUBNET_IP_SET} &/g" \
+        | awk '{print $0} END{print "COMMIT"}' | ipset restore > /dev/null 2>&1
+    echo "${ROUTE_LIST}" | grep pptp | awk '{print $1}' | sed "s/^.*$/-! add ${PPTP_CLIENT_IP_SET} &/g" \
+        | awk '{print $0} END{print "COMMIT"}' | ipset restore > /dev/null 2>&1
+    echo "${IPSEC_SUBNET_LIST}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' \
+        | sed "s/^.*$/-! add ${IPSEC_SUBNET_IP_SET} &/g" | awk '{print $0} END{print "COMMIT"}' | ipset restore > /dev/null 2>&1
+}
+
+clear_invalid_ipsets() {
+    ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+    ipset -q destroy "${PPTP_CLIENT_IP_SET}"
+    ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
+}
+
 set_balance_rule() {
-    [ "${BALANCE_CHAIN}" != "1" ] && return
+    get_balance_chain || { clear_ipsets && return; }
+    create_vpn_ipsets
+    set_balance_chain
+    add_vpn_ipsets
+    clear_invalid_ipsets
 }
 
 
@@ -241,9 +253,6 @@ do
     get_vpn_server
     set_sub_route
     set_vpn_rule
-    get_balance_chain
-    create_vpn_ipsets
-    set_balance_chain
     set_balance_rule
 done
 
