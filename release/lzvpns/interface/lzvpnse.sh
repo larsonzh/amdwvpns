@@ -145,11 +145,11 @@ create_vpn_ipsets_item() {
 }
 
 create_vpn_ipsets() {
-    [ "${BALANCE_CHAIN}" != "1" ] && clear_ipsets && return 1
+    [ "${BALANCE_CHAIN}" != "1" ] && clear_ipsets && return
     create_vpn_ipsets_item "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
     create_vpn_ipsets_item "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
     create_vpn_ipsets_item "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
-    return 0
+    return
 }
 
 get_match_set() {
@@ -201,12 +201,11 @@ set_balance_items() {
 }
 
 set_balance_chain() {
-    [ "${BALANCE_CHAIN}" != "1" ] && return 1
+    [ "${BALANCE_CHAIN}" != "1" ] && return
     get_match_set
     set_balance_items "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
     set_balance_items "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
     set_balance_items "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
-    return 0
 }
 
 set_balance_rule() {
