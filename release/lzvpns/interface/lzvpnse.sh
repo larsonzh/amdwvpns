@@ -15,6 +15,11 @@ PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 
+ROUTE_LIST=
+OVPN_SERVER_ENABLE=0
+PPTPD_ENABLE=0
+IPSEC_SERVER_ENABLE=0
+
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
 # -----------------------------------------------
@@ -81,6 +86,51 @@ detect_dual_wan() {
     return 1
 }
 
+detect_balance_chain() {
+    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return 0
+    return 1
+}
+
+clear_ipsets() {
+    ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+    ipset -q destroy "${PPTP_CLIENT_IP_SET}"
+    ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
+    return 0
+}
+
+get_router_list() {
+    ROUTE_LIST="$( ip route list | grep -Ev 'default|nexthop' )"
+    [ -n "${ROUTE_LIST}" ] return 0
+    echo "$(lzdate)" [$$]: The router is faulty and the master routing table doesn\'t exist. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 1
+}
+
+get_vpn_server_status() {
+    echo "${ROUTE_LIST}" | grep -qE 'tun|tap' && OVPN_SERVER_ENABLE=1 || OVPN_SERVER_ENABLE=0
+    PPTPD_ENABLE="$( nvram get pptpd_enable )"
+    IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
+}
+
+create_vpn_ipsets() {
+    ! detect_balance_chain && clear_ipsets && return 1
+    if [ "${OVPN_SERVER_ENABLE}" = "1" ]; then
+        ipset -! create "${OVPN_SUBNET_IP_SET}" nethash; ipset -q flush "${OVPN_SUBNET_IP_SET}";
+    elif [ -n "$( ipset -q -n list "${OVPN_SUBNET_IP_SET}" )" ]; then
+        ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+    fi
+     if [ "${PPTPD_ENABLE}" = "1" ]; then
+        ipset -! create "${PPTP_CLIENT_IP_SET}" nethash; ipset -q flush "${PPTP_CLIENT_IP_SET}";
+    elif [ -n "$( ipset -q -n list "${PPTP_CLIENT_IP_SET}" )" ]; then
+        ipset -q destroy "${PPTP_CLIENT_IP_SET}"
+    fi
+    if [ "${IPSEC_SERVER_ENABLE}" = "1" ]; then
+        ipset -! create "${IPSEC_SUBNET_IP_SET}" nethash; ipset -q flush "${IPSEC_SUBNET_IP_SET}";
+    elif [ -n "$( ipset -q -n list "${IPSEC_SUBNET_IP_SET}" )" ]; then
+        ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
+    fi
+}
+
+
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
 
@@ -105,7 +155,9 @@ while true
 do
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
     detect_dual_wan || break
-
+    get_router_list || break
+    get_vpn_server_status
+    create_vpn_ipsets
 done
 
 
