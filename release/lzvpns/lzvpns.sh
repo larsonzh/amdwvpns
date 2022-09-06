@@ -125,13 +125,13 @@ cleaning_user_data() {
     str="5s"
     [ "${POLLING_TIME}" -ge "0" ] && [ "${POLLING_TIME}" -le "10" ] && str="${POLLING_TIME}s"
     echo "$(lzdate)" [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
-    [ "${WAN_ACCESS_PORT}" -lt "0" -o "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT=0
-    [ "${POLLING_TIME}" -lt "0" -o "${POLLING_TIME}" -gt "10" ] && POLLING_TIME=5
+    if [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ]; then WAN_ACCESS_PORT=0; fi;
+    if [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ]; then POLLING_TIME=5; fi;
 }
 
 clear_daemon() {
     local buffer="$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' )"
-    [ -z "${buffer}" -a -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
+    [ -z "${buffer}" ] && [ -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
         [ "${1}" != "1" ] && echo "$(lzdate)" [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
@@ -141,10 +141,10 @@ clear_daemon() {
 }
 
 clear_time_task() {
-    [ -z "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ] && {
+    if ! cru l | grep -q "#${START_DAEMON_TIMEER_ID}#"; then
         echo "$(lzdate)" [$$]: No scheduled tasks for this script are running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
-    }
+    fi
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
     rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
@@ -160,14 +160,16 @@ delte_ip_rules() {
 }
 
 restore_ip_rules() {
-    delte_ip_rules "${IP_RULE_PRIO_VPN}"
-    [ "${?}" = "0" ] \
-        && echo "$(lzdate)" [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo "$(lzdate)" [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
-    delte_ip_rules "${IP_RULE_PRIO_HOST}"
-    [ "${?}" = "0" ] \
-        && echo "$(lzdate)" [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo "$(lzdate)" [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    if delte_ip_rules "${IP_RULE_PRIO_VPN}"; then
+        echo "$(lzdate)" [$$]: All VPN rules with priority "${IP_RULE_PRIO_VPN}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        echo "$(lzdate)" [$$]: None of VPN rule with priority "${IP_RULE_PRIO_VPN}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if delte_ip_rules "${IP_RULE_PRIO_HOST}"; then
+        echo "$(lzdate)" [$$]: The WAN access router port rules with the priority of "${IP_RULE_PRIO_HOST}" in the policy routing database have been deleted. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        echo "$(lzdate)" [$$]: None of WAN access router port rule with priority of "${IP_RULE_PRIO_HOST}" in the policy routing database. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 }
 
 restore_sub_routing_table() {
@@ -180,22 +182,24 @@ restore_sub_routing_table() {
 }
 
 restore_routing_table() {
-    [ -z "$( ip route list | grep nexthop )" ] && {
+    if ! ip route list | grep -q nexthop; then
         echo "$(lzdate)" [$$]: WAN0/WAN1 routing table is empty. | tee -ai "${SYSLOG}" 2> /dev/null
         return
-    }
-    restore_sub_routing_table "${WAN0}"
-    [ "${?}" = "0" ] \
-        && echo "$(lzdate)" [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo "$(lzdate)" [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
-    restore_sub_routing_table "${WAN1}"
-    [ "${?}" = "0" ] \
-        && echo "$(lzdate)" [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null \
-        || echo "$(lzdate)" [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if restore_sub_routing_table "${WAN0}"; then
+        echo "$(lzdate)" [$$]: VPN routing data in WAN0 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        echo "$(lzdate)" [$$]: None of VPN routing data in the WAN0 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if restore_sub_routing_table "${WAN1}"; then
+        echo "$(lzdate)" [$$]: VPN routing data in WAN1 routing table has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
+    else
+        echo "$(lzdate)" [$$]: None of VPN routing data in the WAN1 routing table. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 }
 
 restore_balance_chain() {
-    [ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
+    ! iptables -t mangle -L PREROUTING 2> /dev/null | grep -q balance && return
     local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
             | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
             | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
@@ -212,7 +216,8 @@ restore_balance_chain() {
 }
 
 clear_ipsets() {
-    [ -z "$( ipset -q -L -n "${OVPN_SUBNET_IP_SET}" )" ] && [ -z "$( ipset -q -L -n "${PPTP_CLIENT_IP_SET}" )" ] && [ -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" )" ] && {
+    [ -z "$( ipset -q -L -n "${OVPN_SUBNET_IP_SET}" )" ] && [ -z "$( ipset -q -L -n "${PPTP_CLIENT_IP_SET}" )" ] \
+        && [ -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" )" ] && {
         echo "$(lzdate)" [$$]: None of VPN data set of this script residing in the system memory. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
@@ -237,28 +242,30 @@ init_directory() {
 
 clear_event_interface() {
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
-    [ -z "$( grep "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null )" ] && return 2
+    ! grep -q "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null && return 2
     sed -i "/${2}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     return 0
 }
 
 clear_all_event_interface() {
-    clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    [ "${?}" = "0" ] && echo "$(lzdate)" [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
-    clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-    [ "${?}" = "0" ] && echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    if clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"; then
+        echo "$(lzdate)" [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
+    if clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"; then
+        echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
     return 0
 }
 
 delete_data_file() {
     if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
-        rm -rf "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN event data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
-        rm -rf "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN daemon data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -266,21 +273,17 @@ delete_data_file() {
 }
 
 check_file() {
-    local scripts_file_exist=0
-    [ ! -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && {
+    while true
+    do
+        [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && break
         echo "$(lzdate)" [$$]: "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
-        scripts_file_exist=1
-    }
-    [ ! -f "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" ] && {
+        [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && break
         echo "$(lzdate)" [$$]: "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
-        scripts_file_exist=1
-    }
-    if [ "$scripts_file_exist" = 1 ]; then
         clear_all_event_interface
         delete_data_file
         echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
-    fi
+    done
     echo "$(lzdate)" [$$]: Script files are located in the specified directory location. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
@@ -359,25 +362,21 @@ EOF_DAEMON_DATA
 update_data() {
     if [ "${TRANSFER}" = "1" ]; then
         TRANSDATA="${LZ_VERSION}>${VPN_WAN_PORT}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
-        consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"
-        [ "${?}" = "1" ] && {
+        if ! consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             unset TRANSDATA
             clear_all_event_interface
             return 1
-        }
+        fi
         TRANSDATA="${POLLING_TIME}>${WAN0}>${WAN1}>${VPN_EVENT_INTERFACE_SCRIPTS}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${VPN_DAEMON_IP_SET_LOCK}>"
-        consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"
-        [ "${?}" = "1" ] && {
+        if ! consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"; then
             unset TRANSDATA
             clear_all_event_interface
             return 1
-        }
+        fi
         unset TRANSDATA
     else
-        trans_event_data
-        [ "${?}" = "1" ] && clear_all_event_interface && return 1
-        trans_daemon_data
-        [ "${?}" = "1" ] && clear_all_event_interface && return 1
+        ! trans_event_data && clear_all_event_interface && return 1
+        ! trans_daemon_data && clear_all_event_interface && return 1
     fi
     return 0
 }
@@ -394,8 +393,8 @@ set_wan_access_port() {
     ip rule add from all to "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip route flush cache > /dev/null 2>&1
-    if [ -n "$( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep "${router_local_ip}" )" ] \
-        && [ -n "$( ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep "${router_local_ip}" )" ]; then
+    if ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep -q "${router_local_ip}" \
+        && ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep "${router_local_ip}"; then
         echo "$(lzdate)" [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: WAN access port configuration failed. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -429,13 +428,13 @@ get_match_set() {
 }
 
 set_balance_chain() {
-    [ -z "$( iptables -t mangle -L PREROUTING 2> /dev/null | grep balance )" ] && return
+    ! iptables -t mangle -L PREROUTING 2> /dev/null | grep balance && return
     create_vpn_ipsets
     get_match_set
     iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
     iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" dst -j RETURN > /dev/null 2>&1
     iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" dst -j RETURN > /dev/null 2>&1
-    if [ "${VPN_WAN_PORT}" = 0 -o "${VPN_WAN_PORT}" = 1 ]; then
+    if [ "${VPN_WAN_PORT}" = 0 ] || [ "${VPN_WAN_PORT}" = 1 ]; then
         iptables -t mangle -I balance -m set "${MATCH_SET}" "${OVPN_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
         iptables -t mangle -I balance -m set "${MATCH_SET}" "${PPTP_CLIENT_IP_SET}" src -j RETURN > /dev/null 2>&1
         iptables -t mangle -I balance -m set "${MATCH_SET}" "${IPSEC_SUBNET_IP_SET}" src -j RETURN > /dev/null 2>&1
@@ -455,7 +454,7 @@ ipset -q destroy ${VPN_DAEMON_IP_SET_LOCK}
 ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
 nohup sh ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ${POLLING_TIME} > /dev/null 2>&1 &
 sleep 1s
-if [ -n "\$( ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep )" ]; then
+if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
     cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
     sleep 1s
     rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
@@ -474,7 +473,7 @@ EOF_START_DAEMON_SCRIPT
 }
 
 start_daemon() {
-    [ -z "$( which nohup 2> /dev/null )" ] && return
+    ! which nohup 2> /dev/null && return
     [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
 
     nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
@@ -484,9 +483,9 @@ start_daemon() {
     [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
         && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 
-    if [ -n "$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep )" ]; then
+    if ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -qv grep; then
         echo "$(lzdate)" [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG}" 2> /dev/null
-    elif [ -n "$( cru l | grep "#${START_DAEMON_TIMEER_ID}#" )" ]; then
+    elif cru l | grep -q "#${START_DAEMON_TIMEER_ID}#"; then
         echo "$(lzdate)" [$$]: The VPN daemon is starting... | tee -ai "${SYSLOG}" 2> /dev/null
     fi
 }
@@ -499,18 +498,18 @@ create_event_interface() {
 EOF_INTERFACE
     fi
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
-    if [ -z "$( grep -m 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" )" ]; then
+    if grep -qm 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"; then
         sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     else
         [ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
             sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
-    if [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ]; then
+    if ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}"; then
         sed -i "/${3}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
         sed -i "\$a ${2}/${3} # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-    [ -z "$( grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" )" ] && return 1
+    ! grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return 1
     return 0
 }
 
@@ -526,8 +525,7 @@ register_event_interface_error() {
 }
 
 register_event_interface() {
-    create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
-    if [ "${?}" = "0" ]; then
+    if create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"; then
         echo "$(lzdate)" [$$]: The script boot start event interface has been successfully registered. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -535,13 +533,12 @@ register_event_interface() {
         echo "$(lzdate)" [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
-    create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    if [ "${?}" = "0" ]; then
+    if create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"; then
         "$(lzdate)" [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: VPN event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
-        clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"
-        [ "${?}" = "0" ] && echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
+        clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}" \
+            && echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
         register_event_interface_error
         echo "$(lzdate)" [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
@@ -550,10 +547,9 @@ register_event_interface() {
 }
 
 dual_wan_error() {
-    clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}"
-    [ "${?}" = "0" ] && echo "$(lzdate)" [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
-    create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"
-    if [ "${?}" = "0" ]; then
+    clear_event_interface "$VPN_EVENT_FILE" "${VPN_EVENT_INTERFACE_SCRIPTS}" \
+        && echo "$(lzdate)" [$$]: Successfully uninstalled VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+    if create_event_interface "${BOOTLOADER_FILE}" "${PATH_LZ}" "${MAIN_SCRIPTS}"; then
         echo "$(lzdate)" [$$]: The script boot start event interface has been successfully registered. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -562,11 +558,11 @@ dual_wan_error() {
 }
 
 detect_dual_wan() {
-    [ -z "$( ip route list | grep nexthop )" ] && {
+    if ! ip route list | grep -q nexthop; then
         echo "$(lzdate)" [$$]: The dual WAN network is not connected. | tee -ai "${SYSLOG}" 2> /dev/null
         dual_wan_error
         return 1
-    }
+    fi
     echo "$(lzdate)" [$$]: The dual WAN network has been connected. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
@@ -621,9 +617,9 @@ set_lock() {
 }
 
 forced_unlock() {
-    rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
+    rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
     if [ -f "${LOCK_FILE}" ]; then
-        rm -rf "${LOCK_FILE}" > /dev/null 2>&1
+        rm -f "${LOCK_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked.
     else
         echo "$(lzdate)" [$$]: There is no program synchronization lock.
