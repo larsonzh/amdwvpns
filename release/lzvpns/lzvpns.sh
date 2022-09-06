@@ -103,7 +103,7 @@ FORCED_UNLOCKING="unlock"
 PARAM_TOTAL="${#}"
 
 PATH_LOCK="/var/lock"
-LOCK_FILE="${PATH_LOCK}/lzvpns.lock"
+LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 INSTANCE_LIST="${PATH_LOCK}/lzvpns_instance.lock"
 
