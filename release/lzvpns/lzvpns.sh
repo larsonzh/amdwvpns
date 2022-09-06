@@ -110,6 +110,50 @@ TRANSFER=0
 
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
+set_lock() {
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 1
+    echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
+    [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
+    eval exec "${LOCK_FILE_ID}"<>"${LOCK_FILE}"
+    flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
+    sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
+    if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
+        [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
+            echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance.
+            return 1
+        }
+    fi
+    return 0
+}
+
+forced_unlock() {
+    rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
+    if [ -f "${LOCK_FILE}" ]; then
+        rm -f "${LOCK_FILE}" > /dev/null 2>&1
+        echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked.
+    else
+        echo "$(lzdate)" [$$]: There is no program synchronization lock.
+    fi
+    return 0
+}
+
+unset_lock() {
+    [ "${HAMMER}" = "error" ] && return
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
+    [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
+        rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
+    flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
+}
+
+command_parsing() {
+    [ "${PARAM_TOTAL}" = "0" ] && return 0
+    [ "${HAMMER}" = "${STOP_RUN}" ] && return 0
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 0
+    HAMMER="error"
+    echo "$(lzdate)" [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 1
+}
+
 cleaning_user_data() {
     local str="Primary WAN *"
     [ "${WAN_ACCESS_PORT}" = "0" ] && str="Primary WAN"
@@ -552,54 +596,13 @@ start_service() {
     update_data || return 1
     detect_dual_wan || return 1
     set_wan_access_port
-    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+    unset_lock
+    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "lzvpns"
+    set_lock
     start_daemon
     register_event_interface || return 1
+    echo "$(lzdate)" [$$]: LZ VPN support service started successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
-}
-
-set_lock() {
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 1
-    echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
-    [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
-    eval exec "${LOCK_FILE_ID}"<>"${LOCK_FILE}"
-    flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
-    sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
-    if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
-        [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
-            echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance.
-            return 1
-        }
-    fi
-    return 0
-}
-
-forced_unlock() {
-    rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
-    if [ -f "${LOCK_FILE}" ]; then
-        rm -f "${LOCK_FILE}" > /dev/null 2>&1
-        echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked.
-    else
-        echo "$(lzdate)" [$$]: There is no program synchronization lock.
-    fi
-    return 0
-}
-
-unset_lock() {
-    [ "${HAMMER}" = "error" ] && return
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
-    [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
-        rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
-    flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
-}
-
-command_parsing() {
-    [ "${PARAM_TOTAL}" = "0" ] && return 0
-    [ "${HAMMER}" = "${STOP_RUN}" ] && return 0
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 0
-    HAMMER="error"
-    echo "$(lzdate)" [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 1
 }
 
 
