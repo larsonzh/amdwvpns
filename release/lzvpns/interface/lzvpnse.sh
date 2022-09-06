@@ -16,9 +16,12 @@ LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 
 ROUTE_LIST=
+BALANCE_CHAIN=0
 OVPN_SERVER_ENABLE=0
 PPTPD_ENABLE=0
 IPSEC_SERVER_ENABLE=0
+
+MATCH_SET='--match-set'
 
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
@@ -86,9 +89,8 @@ detect_dual_wan() {
     return 1
 }
 
-detect_balance_chain() {
-    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return 0
-    return 1
+get_balance_chain_status() {
+    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
 }
 
 clear_ipsets() {
@@ -98,9 +100,9 @@ clear_ipsets() {
     return 0
 }
 
-get_router_list() {
+get_route_list() {
     ROUTE_LIST="$( ip route list | grep -Ev 'default|nexthop' )"
-    [ -n "${ROUTE_LIST}" ] return 0
+    [ -n "${ROUTE_LIST}" ] && return 0
     echo "$(lzdate)" [$$]: The router is faulty and the master routing table doesn\'t exist. | tee -ai "${SYSLOG}" 2> /dev/null
     return 1
 }
@@ -111,23 +113,77 @@ get_vpn_server_status() {
     IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
 }
 
+create_vpn_ipsets_item() {
+    if [ "${1}" = "1" ]; then
+        ipset -! create "${2}" nethash; ipset -q flush "${2}";
+    elif [ -n "$( ipset -q -n list "${2}" )" ]; then
+        ipset -q destroy "${2}"
+    fi
+}
+
 create_vpn_ipsets() {
-    ! detect_balance_chain && clear_ipsets && return 1
-    if [ "${OVPN_SERVER_ENABLE}" = "1" ]; then
-        ipset -! create "${OVPN_SUBNET_IP_SET}" nethash; ipset -q flush "${OVPN_SUBNET_IP_SET}";
-    elif [ -n "$( ipset -q -n list "${OVPN_SUBNET_IP_SET}" )" ]; then
-        ipset -q destroy "${OVPN_SUBNET_IP_SET}"
+    [ "${BALANCE_CHAIN}" != "1" ] && clear_ipsets && return 1
+    create_vpn_ipsets_item "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
+    create_vpn_ipsets_item "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
+    create_vpn_ipsets_item "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
+    return 0
+}
+
+get_match_set() {
+    case $( uname -m ) in
+        armv7l)
+            MATCH_SET='--match-set'
+        ;;
+        mips)
+            MATCH_SET='--set'
+        ;;
+        aarch64)
+            MATCH_SET='--match-set'
+        ;;
+        *)
+            MATCH_SET='--match-set'
+        ;;
+    esac
+    echo "${MATCH_SET}"
+}
+
+is_balance_item() {
+    iptables -t mangle -L balance 2> /dev/null | grep -qw "${1}" && return 0
+    return 1
+}
+
+delete_balance_items() {
+    local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
+            | grep -w "${1}" \
+            | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
+    [ -z "${number}" ] && return
+    local item_no=
+    for item_no in ${number}
+    do
+        iptables -t mangle -D balance "${item_no}" > /dev/null 2>&1
+    done
+}
+
+set_balance_items() {
+    if [ "${1}" = "1" ]; then
+        if ! is_balance_item "${2}"; then
+            iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" dst -j RETURN > /dev/null 2>&1
+            if [ "${VPN_WAN_PORT}" = 0 ] || [ "${VPN_WAN_PORT}" = 1 ]; then
+                iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" src -j RETURN > /dev/null 2>&1
+            fi
+        fi
+    elif ! is_balance_item "${2}"; then
+        delete_balance_items "${2}"
     fi
-     if [ "${PPTPD_ENABLE}" = "1" ]; then
-        ipset -! create "${PPTP_CLIENT_IP_SET}" nethash; ipset -q flush "${PPTP_CLIENT_IP_SET}";
-    elif [ -n "$( ipset -q -n list "${PPTP_CLIENT_IP_SET}" )" ]; then
-        ipset -q destroy "${PPTP_CLIENT_IP_SET}"
-    fi
-    if [ "${IPSEC_SERVER_ENABLE}" = "1" ]; then
-        ipset -! create "${IPSEC_SUBNET_IP_SET}" nethash; ipset -q flush "${IPSEC_SUBNET_IP_SET}";
-    elif [ -n "$( ipset -q -n list "${IPSEC_SUBNET_IP_SET}" )" ]; then
-        ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
-    fi
+}
+
+set_balance_chain() {
+    [ "${BALANCE_CHAIN}" != "1" ] && return 1
+    get_match_set
+    set_balance_items "${OVPN_SERVER_ENABLE}" "${OVPN_SUBNET_IP_SET}"
+    set_balance_items "${PPTPD_ENABLE}" "${PPTP_CLIENT_IP_SET}"
+    set_balance_items "${IPSEC_SERVER_ENABLE}" "${IPSEC_SUBNET_IP_SET}"
+    return 0
 }
 
 
@@ -155,9 +211,11 @@ while true
 do
     delte_ip_rules "${IP_RULE_PRIO_VPN}"
     detect_dual_wan || break
-    get_router_list || break
+    get_route_list || break
+    get_balance_chain_status
     get_vpn_server_status
     create_vpn_ipsets
+    set_balance_chain
 done
 
 
