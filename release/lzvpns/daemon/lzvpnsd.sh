@@ -110,7 +110,7 @@ do
                 else
                     for VPN_CLIENT in $( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )
                     do
-                        if [ -z "$( echo "${VPN_CLIENT_LIST}" | grep "${VPN_CLIENT}" )" ]; then
+                        if ! echo "${VPN_CLIENT_LIST}" | grep -q "${VPN_CLIENT}"; then
                             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
                                 sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
                             break
@@ -118,7 +118,7 @@ do
                     done
                 fi
             else
-                if [ -n "$( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )" ]; then
+                if ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
                     [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
                         sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
                 fi
@@ -132,7 +132,7 @@ do
             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
                 sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
         fi
-    elif [ -n "$( ipset -q list $IPSEC_SUBNET_IP_SET | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )" ]; then
+    elif ipset -q list $IPSEC_SUBNET_IP_SET | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
         [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
             sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     fi
