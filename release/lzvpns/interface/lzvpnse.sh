@@ -147,7 +147,7 @@ get_match_set() {
     echo "${MATCH_SET}"
 }
 
-is_balance_item() {
+get_balance_used() {
     iptables -t mangle -L balance 2> /dev/null | grep -qw "${1}" && return 0
     return 1
 }
@@ -166,13 +166,13 @@ delete_balance_items() {
 
 set_balance_items() {
     if [ "${1}" = "1" ]; then
-        if ! is_balance_item "${2}"; then
+        if ! get_balance_used "${2}"; then
             iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" dst -j RETURN > /dev/null 2>&1
             if [ "${VPN_WAN_PORT}" = 0 ] || [ "${VPN_WAN_PORT}" = 1 ]; then
                 iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" src -j RETURN > /dev/null 2>&1
             fi
         fi
-    elif ! is_balance_item "${2}"; then
+    elif ! get_balance_used "${2}"; then
         delete_balance_items "${2}"
     fi
 }
