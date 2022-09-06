@@ -6,6 +6,9 @@
 
 # BEIGIN
 
+
+# --------------- Global Variable ---------------
+
 PATH_TMP="${0%/*}"
 [ "${PATH_TMP:0:1}" != '/' ] && PATH_TMP="$( pwd )${PATH_TMP#*.}"
 PATH_TMP="${PATH_TMP%/*}/tmp"
@@ -26,6 +29,9 @@ MATCH_SET='--match-set'
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
 # -----------------------------------------------
+
+
+# ------------------ Function -------------------
 
 get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
 
