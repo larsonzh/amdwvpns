@@ -137,7 +137,7 @@ get_balance_chain() {
 
 create_vpn_ipsets_item() {
     [ "${1}" != "1" ] && return
-     ipset -! create "${2}" nethash; ipset -q flush "${2}";
+    ipset -! create "${2}" nethash; ipset -q flush "${2}";
 }
 
 create_vpn_ipsets() {
