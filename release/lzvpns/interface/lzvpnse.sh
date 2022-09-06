@@ -9,7 +9,7 @@
 PATH_TMP="${0%/*}"
 [ "${PATH_TMP:0:1}" != '/' ] && PATH_TMP="$( pwd )${PATH_TMP#*.}"
 PATH_TMP="${PATH_TMP%/*}/tmp"
-VPN_DATA_FILE="lzvpnsd.dat"
+VPN_DATA_FILE="lzvpnse.dat"
 
 PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
