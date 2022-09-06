@@ -67,7 +67,7 @@ unset_lock() {
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
-lzdate() { echo "$( date +"%F %T" )"; }
+lzdate() { eval echo "$( date +"%F %T" )"; }
 
 set_lock
 
