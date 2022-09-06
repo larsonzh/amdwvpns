@@ -13,7 +13,7 @@ PATH_INTERFACE="${PATH_INTERFACE%/*}/interface"
 VPN_DAEMON_DATA_FILE="lzvpnsd.dat"
 
 # ------------- Data Exchange Area --------------
-TRANSDATA=">>>>>>>>"
+TRANSDATA=">>>>>>>>>"
 # -----------------------------------------------
 
 get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
