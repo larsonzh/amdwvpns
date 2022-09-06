@@ -631,7 +631,7 @@ unset_lock() {
     [ "${HAMMER}" = "error" ] && return
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
-        rm -rf "${INSTANCE_LIST}" > /dev/null 2>&1
+        rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
