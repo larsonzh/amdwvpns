@@ -125,8 +125,8 @@ cleaning_user_data() {
     str="5s"
     [ "${POLLING_TIME}" -ge "0" ] && [ "${POLLING_TIME}" -le "10" ] && str="${POLLING_TIME}s"
     echo "$(lzdate)" [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
-    if [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ]; then WAN_ACCESS_PORT=0; fi;
-    if [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ]; then POLLING_TIME=5; fi;
+    [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT=0
+    [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ] && POLLING_TIME=5
 }
 
 clear_daemon() {
