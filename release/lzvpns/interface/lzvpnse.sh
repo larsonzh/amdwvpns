@@ -18,9 +18,6 @@ PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 
-HAMMER="${1}"
-MAIN="lzvpns"
-
 ROUTE_LIST=
 IPSEC_SUBNET_LIST=
 OVPN_SERVER_ENABLE=0
@@ -28,6 +25,9 @@ PPTPD_ENABLE=0
 IPSEC_SERVER_ENABLE=0
 
 MATCH_SET='--match-set'
+
+HAMMER="${1}"
+MAIN="lzvpns"
 
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
@@ -77,12 +77,14 @@ get_data() {
 }
 
 set_lock() {
+    [ "${HAMMER}" = "${MAIN}" ] && return
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
     eval exec "${LOCK_FILE_ID}"<>"${LOCK_FILE}"
     flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 }
 
 unset_lock() {
+    [ "${HAMMER}" = "${MAIN}" ] && return
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
