@@ -22,7 +22,7 @@ TRANSDATA=">>>>>>>>>"
 get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
 
 get_transdata() {
-	[ "${TRANSDATA}" ] || return 1
+    [ "${TRANSDATA}" ] || return 1
     echo "${TRANSDATA}" | grep -qE '^[>]|[>][>]' && return 1
     LZ_VERSION="$( get_trsta "1" )"
     VPN_WAN_PORT="$( get_trsta "2" )"
@@ -38,25 +38,25 @@ get_transdata() {
 get_exta() { echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}'; }
 
 get_exdata() {
-	[ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && return 1
-	local data_buf="$( cat "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null )"
-	[ "${data_buf}" ] || return 1
+    [ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && return 1
+    local data_buf="$( cat "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null )"
+    [ "${data_buf}" ] || return 1
     LZ_VERSION="$( get_exta "${data_buf}" "1" )"
-	VPN_WAN_PORT="$( get_exta "${data_buf}" "2" )"
-	WAN0="$( get_exta "${data_buf}" "3" )"
-	WAN1="$( get_exta "${data_buf}" "4" )"
-	IP_RULE_PRIO_VPN="$( get_exta "${data_buf}" "5" )"
-	OVPN_SUBNET_IP_SET="$( get_exta "${data_buf}" "6" )"
-	PPTP_CLIENT_IP_SET="$( get_exta "${data_buf}" "7" )"
-	IPSEC_SUBNET_IP_SET="$( get_exta "${data_buf}" "8" )"
-	SYSLOG="$( get_exta "${data_buf}" "9" )"
-	return 0
+    VPN_WAN_PORT="$( get_exta "${data_buf}" "2" )"
+    WAN0="$( get_exta "${data_buf}" "3" )"
+    WAN1="$( get_exta "${data_buf}" "4" )"
+    IP_RULE_PRIO_VPN="$( get_exta "${data_buf}" "5" )"
+    OVPN_SUBNET_IP_SET="$( get_exta "${data_buf}" "6" )"
+    PPTP_CLIENT_IP_SET="$( get_exta "${data_buf}" "7" )"
+    IPSEC_SUBNET_IP_SET="$( get_exta "${data_buf}" "8" )"
+    SYSLOG="$( get_exta "${data_buf}" "9" )"
+    return 0
 }
 
 get_data() {
-	get_exdata && return 0
-	get_transdata && return 0
-	return 1
+    get_exdata && return 0
+    get_transdata && return 0
+    return 1
 }
 
 set_lock() {
