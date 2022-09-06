@@ -23,7 +23,7 @@ get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
 
 get_transdata() {
 	[ "${TRANSDATA}" ] || return 1
-    [ -n "$( echo "${TRANSDATA}" | grep -E '^[>]|[>][>]' )" ] && return 1
+    echo "${TRANSDATA}" | grep -qE '^[>]|[>][>]' && return 1
     LZ_VERSION="$( get_trsta "1" )"
     VPN_WAN_PORT="$( get_trsta "2" )"
     WAN0="$( get_trsta "3" )"
