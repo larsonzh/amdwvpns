@@ -229,6 +229,8 @@ set_balance_rule() {
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
 
+# -------------- Script Execution ---------------
+
 set_lock
 
 get_data || {
@@ -256,7 +258,6 @@ do
     set_vpn_rule
     set_balance_rule
 done
-
 
 unset_lock
 
