@@ -19,7 +19,7 @@ LOCK_FILE_ID=555
 TRANSDATA=">>>>>>>>"
 # -----------------------------------------------
 
-get_trsta() { echo "$( echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}' )"; }
+get_trsta() { echo "${TRANSDATA}" | awk -F '>' '{print $"'"${1}"'"}'; }
 
 get_transdata() {
 	[ "${TRANSDATA}" ] || return 1
@@ -34,7 +34,7 @@ get_transdata() {
     SYSLOG="$( get_trsta "8" )"
 }
 
-get_exta() { echo "$( echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}' )"; }
+get_exta() { echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}'; }
 
 get_exdata() {
 	[ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && return 1
