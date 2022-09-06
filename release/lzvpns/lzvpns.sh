@@ -26,8 +26,8 @@ WAN_ACCESS_PORT=0
 VPN_WAN_PORT=0
 
 # Polling time to detect VPN client access.
-# 1~10s (The default is 5 seconds)
-POLLING_TIME=5
+# 1~10s (The default is 3 seconds)
+POLLING_TIME=3
 
 
 # --------------- Global Variable ---------------
