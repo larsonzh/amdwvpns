@@ -69,7 +69,20 @@ unset_lock() {
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
+delte_ip_rules() {
+    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
+        | awk '{system($0" > /dev/null 2>&1")}'
+    return 0
+}
+
+detect_dual_wan() {
+    ip route list | grep -q nexthop && return 0
+    echo "$(lzdate)" [$$]: The dual WAN network is not connected. | tee -ai "${SYSLOG}" 2> /dev/null
+    return 1
+}
+
 lzdate() { eval echo "$( date +"%F %T" )"; }
+
 
 set_lock
 
@@ -88,6 +101,12 @@ get_data || {
 echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
 
+while true
+do
+    delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    detect_dual_wan || break
+
+done
 
 
 unset_lock
