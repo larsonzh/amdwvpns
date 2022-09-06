@@ -54,7 +54,7 @@ get_data() {
 }
 
 get_data || {
-    POLLING_TIME=5
+    POLLING_TIME=3
     WAN0=100
     WAN1=200
     VPN_EVENT_INTERFACE_SCRIPTS="lzvpnse.sh"
