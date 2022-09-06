@@ -99,7 +99,8 @@ get_route_list() {
 
 get_ipsec_subnet_list() {
     IPSEC_SUBNET_LIST="$( nvram get ipsec_profile_1 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )"
-    [ -z "${IPSEC_SUBNET_LIST}" ] && IPSEC_SUBNET_LIST="$( nvram get ipsec_profile_2 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )"
+    [ -z "${IPSEC_SUBNET_LIST}" ] && IPSEC_SUBNET_LIST="$( nvram get ipsec_profile_2 | sed 's/>/\n/g' \
+        | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )"
 }
 
 get_vpn_server() {
@@ -120,8 +121,10 @@ set_vpn_rule() {
     [ "${VPN_WAN_PORT}" = "0" ] && vpn_wan="${WAN0}"
     [ "${VPN_WAN_PORT}" = "1" ] && vpn_wan="${WAN1}"
     [ -z "${vpn_wan}" ] && return
-    echo "${ROUTE_VPN_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
-    echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${ROUTE_VPN_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" \
+        | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" \
+        | awk '{system($0" > /dev/null 2>&1")}'
 }
 
 clear_ipsets() {
@@ -161,7 +164,6 @@ get_match_set() {
             MATCH_SET='--match-set'
         ;;
     esac
-    echo "${MATCH_SET}"
 }
 
 get_balance_used() {
@@ -171,8 +173,7 @@ get_balance_used() {
 
 delete_balance_items() {
     local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
-            | grep -w "${1}" \
-            | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
+            | grep -w "${1}" | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
     [ -z "${number}" ] && return
     local item_no=
     for item_no in ${number}
