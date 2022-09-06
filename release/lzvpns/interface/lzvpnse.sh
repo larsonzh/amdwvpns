@@ -18,6 +18,9 @@ PATH_LOCK="/var/lock"
 LOCK_FILE="${PATH_LOCK}/lz_rule.lock"
 LOCK_FILE_ID=555
 
+HAMMER="${1}"
+MAIN="lzvpns"
+
 ROUTE_LIST=
 IPSEC_SUBNET_LIST=
 OVPN_SERVER_ENABLE=0
@@ -284,8 +287,10 @@ get_data || {
     SYSLOG="/tmp/syslog.log"
 }
 
-echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
+[ "${HAMMER}" = "${MAIN}" ] && {
+    echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
+}
 
 while true
 do
