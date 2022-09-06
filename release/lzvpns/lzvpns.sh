@@ -96,7 +96,7 @@ HARDWARE_TYPE=$( uname -m )
 MATCH_SET='--match-set'
 
 # Script Commands
-HAMMER="$( echo "${1}" | tr A-Z a-z )"
+HAMMER="$( echo "${1}" | tr '[:A-Z:]' '[:a-z:]' )"
 STOP_RUN="stop"
 FORCED_UNLOCKING="unlock"
 
