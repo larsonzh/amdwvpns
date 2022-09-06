@@ -79,8 +79,8 @@ unset_lock() {
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
-delte_ip_rules() {
-    ip rule list | grep -wo "^${1}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
+delte_vpn_rules() {
+    ip rule list | grep -wo "^${IP_RULE_PRIO_VPN}:" | awk -F: '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
     return 0
 }
@@ -89,10 +89,6 @@ detect_dual_wan() {
     ip route list | grep -q nexthop && return 0
     echo "$(lzdate)" [$$]: The dual WAN network is not connected. | tee -ai "${SYSLOG}" 2> /dev/null
     return 1
-}
-
-get_balance_chain() {
-    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
 }
 
 clear_ipsets() {
@@ -110,8 +106,8 @@ get_route_list() {
 }
 
 get_ipsec_subnet_list() {
-    IPSEC_SUBNET_LIST=$( nvram get ipsec_profile_1 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )
-    [ -z "${IPSEC_SUBNET_LIST}" ] && IPSEC_SUBNET_LIST=$( nvram get ipsec_profile_2 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )
+    IPSEC_SUBNET_LIST="$( nvram get ipsec_profile_1 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )"
+    [ -z "${IPSEC_SUBNET_LIST}" ] && IPSEC_SUBNET_LIST="$( nvram get ipsec_profile_2 | sed 's/>/\n/g' | sed -n 15p | grep -Eo '([0-9]{1,3}[\.]){2}[0-9]{1,3}' | sed 's/^.*$/&\.0\/24/' )"
 }
 
 get_vpn_server() {
@@ -119,6 +115,25 @@ get_vpn_server() {
     PPTPD_ENABLE="$( nvram get pptpd_enable )"
     IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
     [ "${IPSEC_SERVER_ENABLE}" = "1" ] && get_ipsec_subnet_list
+}
+
+set_sub_route() {
+    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN0}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN1}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    ROUTE_VPN_LIST="$( echo "${ROUTE_LIST}" | grep -E 'pptp|tun|tap' | awk '{print $1}' )"
+}
+
+set_vpn_rule() {
+    local vpn_wan=
+    [ "${VPN_WAN_PORT}" = "0" ] && vpn_wan="${WAN0}"
+    [ "${VPN_WAN_PORT}" = "1" ] && vpn_wan="${WAN1}"
+    [ -z "${vpn_wan}" ] && return
+    echo "${ROUTE_VPN_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
+    echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
+}
+
+get_balance_chain() {
+    iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && BALANCE_CHAIN=1 || BALANCE_CHAIN=0
 }
 
 create_vpn_ipsets_item() {
@@ -176,7 +191,7 @@ set_balance_items() {
     if [ "${1}" = "1" ]; then
         if ! get_balance_used "${2}"; then
             iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" dst -j RETURN > /dev/null 2>&1
-            if [ "${VPN_WAN_PORT}" = 0 ] || [ "${VPN_WAN_PORT}" = 1 ]; then
+            if [ "${VPN_WAN_PORT}" = "0" ] || [ "${VPN_WAN_PORT}" = "1" ]; then
                 iptables -t mangle -I balance -m set "${MATCH_SET}" "${2}" src -j RETURN > /dev/null 2>&1
             fi
         fi
@@ -194,20 +209,10 @@ set_balance_chain() {
     return 0
 }
 
-set_sub_route() {
-    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN0}/g" | awk '{system($0" > /dev/null 2>&1")}'
-    echo "${ROUTE_LIST}" | sed "s/^.*$/ip route add & table ${WAN1}/g" | awk '{system($0" > /dev/null 2>&1")}'
-    ROUTE_VPN_LIST="$( echo "${ROUTE_LIST}" | grep -E 'pptp|tun|tap' | awk '{print $1}' )"
+set_balance_rule() {
+    [ "${BALANCE_CHAIN}" != "1" ] && return
 }
 
-set_vpn_rule() {
-    local vpn_wan=
-    [ "${VPN_WAN_PORT}" = "0" ] && vpn_wan="${WAN0}"
-    [ "${VPN_WAN_PORT}" = "1" ] && vpn_wan="${WAN1}"
-    [ -z "${vpn_wan}" ] && return
-    echo "${ROUTE_VPN_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
-    echo "${IPSEC_SUBNET_LIST}" | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" | awk '{system($0" > /dev/null 2>&1")}'
-}
 
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
@@ -231,15 +236,16 @@ echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | 
 
 while true
 do
-    delte_ip_rules "${IP_RULE_PRIO_VPN}"
+    delte_vpn_rules
     detect_dual_wan || break
     get_route_list || break
-    get_balance_chain
     get_vpn_server
-    create_vpn_ipsets
-    set_balance_chain
     set_sub_route
     set_vpn_rule
+    get_balance_chain
+    create_vpn_ipsets
+    set_balance_chain
+    set_balance_rule
 done
 
 
