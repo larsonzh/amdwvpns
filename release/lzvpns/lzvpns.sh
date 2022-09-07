@@ -596,7 +596,7 @@ start_service() {
     update_data || return 1
     detect_dual_wan || return 1
     set_wan_access_port
-    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "lzvpns"
+    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "${PATH_INTERFACE}"
     start_daemon
     register_event_interface || return 1
     echo "$(lzdate)" [$$]: LZ VPN support service started successfully. | tee -ai "${SYSLOG}" 2> /dev/null
