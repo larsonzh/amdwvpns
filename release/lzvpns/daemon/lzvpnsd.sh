@@ -2,10 +2,12 @@
 # lzvpnsd.sh v0.0.1
 # By LZ (larsonzhang@gmail.com)
 
+# LZ VPNS script for asuswrt/merlin based router
+
+
 # VPN daemon script
 
 # BEIGIN
-
 
 # --------------- Global Variable ---------------
 
