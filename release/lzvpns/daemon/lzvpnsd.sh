@@ -153,4 +153,6 @@ done
 
 ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
 
+exit 0
+
 # END
