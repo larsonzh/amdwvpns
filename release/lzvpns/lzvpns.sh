@@ -467,7 +467,7 @@ if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
     echo \$(lzdate) [\$\$]: >> "${SYSLOG}" 2> /dev/null
     echo \$(lzdate) [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
     echo \$(lzdate) [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
-    echo \$(lzdate) [\$\$]: ----------- LZ "$LZ_VERSION" VPN Daemon -------------- >> ${SYSLOG} 2> /dev/null
+    echo \$(lzdate) [\$\$]: ----------- LZ "${LZ_VERSION}" VPN Daemon -------------- >> ${SYSLOG} 2> /dev/null
     echo \$(lzdate) [\$\$]: >> ${SYSLOG} 2> /dev/null
 fi
 
@@ -597,6 +597,7 @@ stop_service() {
 start_service() {
     update_data || return 1
     detect_dual_wan || return 1
+    echo "$(lzdate)" [$$]: Start LZ VPN support service...... | tee -ai "${SYSLOG}" 2> /dev/null
     set_wan_access_port
     sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "${PATH_INTERFACE}"
     start_daemon
