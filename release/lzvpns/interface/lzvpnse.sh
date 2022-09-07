@@ -29,7 +29,7 @@ MATCH_SET='--match-set'
 
 
 # ------------- Data Exchange Area --------------
-TRANSDATA=">>>>>>>>>"
+TRANSDATA=">>>>>>>>>>>"
 # -----------------------------------------------
 
 
@@ -41,14 +41,16 @@ get_transdata() {
     [ "${TRANSDATA}" ] || return 1
     echo "${TRANSDATA}" | grep -qE '^[>]|[>][>]' && return 1
     LZ_VERSION="$( get_trsta "1" )"
-    VPN_WAN_PORT="$( get_trsta "2" )"
-    WAN0="$( get_trsta "3" )"
-    WAN1="$( get_trsta "4" )"
-    IP_RULE_PRIO_VPN="$( get_trsta "5" )"
-    OVPN_SUBNET_IP_SET="$( get_trsta "6" )"
-    PPTP_CLIENT_IP_SET="$( get_trsta "7" )"
-    IPSEC_SUBNET_IP_SET="$( get_trsta "8" )"
-    SYSLOG="$( get_trsta "9" )"
+    WAN_ACCESS_PORT="$( get_trsta "2" )"
+    VPN_WAN_PORT="$( get_trsta "3" )"
+    POLLING_TIME="$( get_trsta "4" )"
+    WAN0="$( get_trsta "5" )"
+    WAN1="$( get_trsta "6" )"
+    IP_RULE_PRIO_VPN="$( get_trsta "7" )"
+    OVPN_SUBNET_IP_SET="$( get_trsta "8" )"
+    PPTP_CLIENT_IP_SET="$( get_trsta "9" )"
+    IPSEC_SUBNET_IP_SET="$( get_trsta "10" )"
+    SYSLOG="$( get_trsta "11" )"
 }
 
 get_exta() { echo "${1}" | awk -F '>' 'NR=="'"${2}"'" {print $1}'; }
@@ -58,14 +60,16 @@ get_exdata() {
     local data_buf="$( cat "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null )"
     [ "${data_buf}" ] || return 1
     LZ_VERSION="$( get_exta "${data_buf}" "1" )"
-    VPN_WAN_PORT="$( get_exta "${data_buf}" "2" )"
-    WAN0="$( get_exta "${data_buf}" "3" )"
-    WAN1="$( get_exta "${data_buf}" "4" )"
-    IP_RULE_PRIO_VPN="$( get_exta "${data_buf}" "5" )"
-    OVPN_SUBNET_IP_SET="$( get_exta "${data_buf}" "6" )"
-    PPTP_CLIENT_IP_SET="$( get_exta "${data_buf}" "7" )"
-    IPSEC_SUBNET_IP_SET="$( get_exta "${data_buf}" "8" )"
-    SYSLOG="$( get_exta "${data_buf}" "9" )"
+    WAN_ACCESS_PORT="$( get_exta "${data_buf}" "2" )"
+    VPN_WAN_PORT="$( get_exta "${data_buf}" "3" )"
+    POLLING_TIME="$( get_exta "${data_buf}" "4" )"
+    WAN0="$( get_exta "${data_buf}" "5" )"
+    WAN1="$( get_exta "${data_buf}" "6" )"
+    IP_RULE_PRIO_VPN="$( get_exta "${data_buf}" "7" )"
+    OVPN_SUBNET_IP_SET="$( get_exta "${data_buf}" "8" )"
+    PPTP_CLIENT_IP_SET="$( get_exta "${data_buf}" "9" )"
+    IPSEC_SUBNET_IP_SET="$( get_exta "${data_buf}" "10" )"
+    SYSLOG="$( get_exta "${data_buf}" "11" )"
     return 0
 }
 
@@ -278,7 +282,9 @@ set_lock
 
 get_data || {
     LZ_VERSION=v0.0.1
+    WAN_ACCESS_PORT=0
     VPN_WAN_PORT=0
+    POLLING_TIME=3
     WAN0=100
     WAN1=200
     IP_RULE_PRIO_VPN=998
