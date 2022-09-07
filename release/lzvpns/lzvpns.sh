@@ -275,9 +275,9 @@ init_directory() {
     chmod 775 "${PATH_INTERFACE}" > /dev/null 2>&1
     [ ! -d "${PATH_TMP}" ] && mkdir -p "${PATH_TMP}" > /dev/null 2>&1
     chmod 775 "${PATH_TMP}" > /dev/null 2>&1
-    cd "${PATH_INTERFACE}/" > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
-    cd "${PATH_TMP}/" > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
-    cd "${PATH_LZ}/" > /dev/null 2>&1 && chmod -R 775 * > /dev/null 2>&1
+    cd "${PATH_INTERFACE}/" > /dev/null 2>&1 && chmod -R 775 ./* > /dev/null 2>&1
+    cd "${PATH_TMP}/" > /dev/null 2>&1 && chmod -R 775 ./* > /dev/null 2>&1
+    cd "${PATH_LZ}/" > /dev/null 2>&1 && chmod -R 775 ./* > /dev/null 2>&1
     echo "$(lzdate)" [$$]: The application directory for this script has been reinitialized. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
@@ -330,35 +330,33 @@ check_file() {
 }
 
 update_data_item() {
-    local data_value=
-    eval data_value=\"\${"${1}"}\"
-    local data_item="$( grep -wo "${1}=.$" "${2}" > /dev/null 2>&1 | sed 's/\"//g' )"
+    local data_item="$( grep -wo "${1}=.$" "${3}" > /dev/null 2>&1 | sed 's/\"//g' )"
     [ -z "${data_item}" ] || return 1
-    [ "${data_item#*=}" != "${data_value}" ] && {
-        sed -i "s:${1}=.*$:${1}=\"${data_value}\":g" "${2}" > /dev/null 2>&1
-        data_item="$( grep -wo "${1}=.$" "${2}" > /dev/null 2>&1 | sed 's/\"//g' )"
-        [ "${data_item#*=}" != "${data_value}" ] && return 3
+    [ "${data_item#*=}" != "${2}" ] && {
+        sed -i "s:${1}=.*$:${1}=\"${2}\":g" "${3}" > /dev/null 2>&1
+        data_item="$( grep -wo "${1}=.$" "${3}" > /dev/null 2>&1 | sed 's/\"//g' )"
+        [ "${data_item#*=}" != "${2}" ] && return 3
         return 2
     }
     return 0
 }
 
 consistency_update() {
-    update_data_item "${1}" "${2}"
+    update_data_item "${1}" "${2}" "${3}"
     local retval="${?}"
     if [ "${retval}" = "1" ]; then
-        echo "$(lzdate)" [$$]: Missing data item "${1}" in VPN "${3}" script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "$(lzdate)" [$$]: Data item consistency confirmation in VPN "${3}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "$(lzdate)" [$$]: Missing data item "${1}" in VPN "${4}" script file. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "$(lzdate)" [$$]: Data item consistency confirmation in VPN "${4}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
         echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     elif [ "${retval}" = "2" ]; then
-        echo "$(lzdate)" [$$]: The data item "${1}" in VPN "${3}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "$(lzdate)" [$$]: The data item "${1}" in VPN "${4}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ "${retval}" = "3" ]; then
-        echo "$(lzdate)" [$$]: Update of data item "${1}" in VPN "${3}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "$(lzdate)" [$$]: Update of data item "${1}" in VPN "${4}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
         echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
-    echo "$(lzdate)" [$$]: All data items in VPN "${3}" script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "$(lzdate)" [$$]: All data items in VPN "${4}" script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
     return 0
 }
 
@@ -403,45 +401,41 @@ EOF_DAEMON_DATA
 }
 
 update_data() {
+    local TRANSDATA=
     if [ "${TRANSFER}" = "1" ]; then
         rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
         rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
-        if ! consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
-            unset TRANSDATA
+        if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             clear_all_event_interface
             return 1
         fi
         TRANSDATA="${POLLING_TIME}>${WAN0}>${WAN1}>${VPN_EVENT_INTERFACE_SCRIPTS}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${VPN_DAEMON_IP_SET_LOCK}>"
-        if ! consistency_update "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"; then
-            unset TRANSDATA
+        if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"; then
             clear_all_event_interface
             return 1
         fi
     else
         TRANSDATA=">>>>>>>>>>>"
-        update_data_item "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-        update_data_item "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}"
+        update_data_item "TRANSDATA" "${TRANSDATA}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+        update_data_item "TRANSDATA" "${TRANSDATA}" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}"
         ! trans_event_data && {
-            unset TRANSDATA
             clear_all_event_interface
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
             return 1
         }
         ! trans_daemon_data && {
-            unset TRANSDATA
             clear_all_event_interface
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
             return 1
         }
     fi
-    unset TRANSDATA
    return 0
 }
 
 set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" != "0" ] && [ "${WAN_ACCESS_PORT}" != "1" ] && return 2
-    local router_local_ip="$( echo $( ifconfig br0 2> /dev/null ) | awk '{print $7}' | awk -F: '{print $2}' )" 
+    local router_local_ip="$( ifconfig br0 2> /dev/null | grep "inet addr:" | awk -F ":" '{print $2}' | awk '{print $1}' )" 
     [ -z "${router_local_ip}" ] && {
         echo "$(lzdate)" [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
