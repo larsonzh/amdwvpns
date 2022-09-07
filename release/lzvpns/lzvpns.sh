@@ -404,6 +404,8 @@ EOF_DAEMON_DATA
 
 update_data() {
     if [ "${TRANSFER}" = "1" ]; then
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
         if ! consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             unset TRANSDATA
@@ -416,12 +418,25 @@ update_data() {
             clear_all_event_interface
             return 1
         fi
-        unset TRANSDATA
     else
-        ! trans_event_data && clear_all_event_interface && return 1
-        ! trans_daemon_data && clear_all_event_interface && return 1
+        TRANSDATA=">>>>>>>>>>>"
+        update_data_item "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+        update_data_item "TRANSDATA" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}"
+        ! trans_event_data && {
+            unset TRANSDATA
+            clear_all_event_interface
+            echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+            return 1
+        }
+        ! trans_daemon_data && {
+            unset TRANSDATA
+            clear_all_event_interface
+            echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+            return 1
+        }
     fi
-    return 0
+    unset TRANSDATA
+   return 0
 }
 
 set_wan_access_port() {
