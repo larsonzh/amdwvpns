@@ -288,7 +288,7 @@ get_data || {
     SYSLOG="/tmp/syslog.log"
 }
 
-[ "${HAMMER}" = "${PATH_TMP%/*}/interface" ] && {
+[ "${HAMMER}" != "${PATH_TMP%/*}/interface" ] && {
     echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
     echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
 }
@@ -306,6 +306,10 @@ do
 done
 
 unset_lock
+
+[ "${HAMMER}" != "${PATH_TMP%/*}/interface" ] && {
+    echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+}
 
 exit 0
 
