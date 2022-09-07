@@ -16,12 +16,12 @@
 
 #  ------------- User Defined Data --------------
 
-# The host port of the router, which is used by the VPN client when accessing 
-# the router from the WAN using the domain name or IP address. 
+# The host port of the router, which is used by the VPN client when accessing the router 
+# from the WAN using the domain name or IP address. 
 # 0--Primary WAN (Default), 1--Secondary WAN
 WAN_ACCESS_PORT=0
 
-# The router port used by the VPN client to access the WAN through the router.
+# The router host port used by VPN clients when accessing the WAN through the router.
 # 0--Primary WAN (Default), 1--Secondary WAN, Other--System Allocation
 VPN_WAN_PORT=0
 
