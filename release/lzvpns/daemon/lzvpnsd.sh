@@ -72,7 +72,7 @@ get_data || {
     VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 }
 
-[ "${1}" -gt "0" ] && [ "${1}" -le "60" ] && POLLING_TIME="${1}" || POLLING_TIME="3"
+[ "${1}" -gt "0" ] && [ "${1}" -le "10" ] && POLLING_TIME="${1}" || POLLING_TIME="3"
 POLLING_TIME="${POLLING_TIME}s"
 
 ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" list:set
