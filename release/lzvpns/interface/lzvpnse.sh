@@ -2,10 +2,12 @@
 # lzvpnse.sh v0.0.1
 # By LZ (larsonzhang@gmail.com)
 
+# LZ VPNS script for asuswrt/merlin based router
+
+
 # VPN event processing script
 
 # BEIGIN
-
 
 # --------------- Global Variable ---------------
 
