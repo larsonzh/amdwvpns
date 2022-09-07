@@ -365,7 +365,9 @@ consistency_update() {
 trans_event_data() {
     cat > "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null <<EOF_EVENT_DATA
 "${LZ_VERSION}"
+"${WAN_ACCESS_PORT}"
 "${VPN_WAN_PORT}"
+"${POLLING_TIME}"
 "${WAN0}"
 "${WAN1}"
 "${IP_RULE_PRIO_VPN}"
@@ -402,7 +404,7 @@ EOF_DAEMON_DATA
 
 update_data() {
     if [ "${TRANSFER}" = "1" ]; then
-        TRANSDATA="${LZ_VERSION}>${VPN_WAN_PORT}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
+        TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
         if ! consistency_update "TRANSDATA" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             unset TRANSDATA
             clear_all_event_interface
