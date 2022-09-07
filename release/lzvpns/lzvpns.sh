@@ -464,11 +464,11 @@ if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
     sleep 1s
     rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
     lzdate() { eval echo "\$( date +"%F %T" )"; }
-    echo \$(lzdate) [\$\$]: >> "${SYSLOG}" 2> /dev/null
-    echo \$(lzdate) [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
-    echo \$(lzdate) [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
-    echo \$(lzdate) [\$\$]: ----------- LZ "${LZ_VERSION}" VPN Daemon -------------- >> ${SYSLOG} 2> /dev/null
-    echo \$(lzdate) [\$\$]: >> ${SYSLOG} 2> /dev/null
+    echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
+    echo "\$(lzdate)" [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
+    echo "\$(lzdate)" [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
+    echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon ------------- >> ${SYSLOG} 2> /dev/null
+    echo "\$(lzdate)" [\$\$]: >> ${SYSLOG} 2> /dev/null
 fi
 
 flock -u ${LOCK_FILE_ID} > /dev/null 2>&1
