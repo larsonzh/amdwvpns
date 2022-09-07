@@ -610,10 +610,10 @@ start_service() {
 # -------------- Script Execution ---------------
 
 echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 
 while ture
 do
@@ -627,7 +627,7 @@ done
 
 unset_lock
 
-echo "$(lzdate)" [$$]: ---------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
 
