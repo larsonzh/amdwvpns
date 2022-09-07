@@ -242,15 +242,32 @@ set_balance_rule() {
     clear_invalid_ipsets
 }
 
-status_output() {
-    local vpn_item=
+print_status() {
+    local vpn_item="Primary WAN"
+    [ "${WAN_ACCESS_PORT}" = "1" ] && vpn_item="Secondary WAN"
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+	echo "$(lzdate)" [$$]: WAN Access Host Port: "${vpn_item}" | tee -ai "${SYSLOG}" 2> /dev/null
+
+    vpn_item="System Allocation"
+    [ "${VPN_WAN_PORT}" = "0" ] && vpn_item="Primary WAN"
+    [ "${VPN_WAN_PORT}" = "1" ] && vpn_item="Secondary WAN"
+	echo "$(lzdate)" [$$]: VPN Client WAN Port: "${vpn_item}" | tee -ai "${SYSLOG}" 2> /dev/null
+	echo "$(lzdate)" [$$]: Polling Detection Time: "${POLLING_TIME}s" | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+
 	local index="0"
 	for vpn_item in $( echo "${ROUTE_LIST}" | grep -E 'tun|tap' | awk '{print $1":"$3}' )
 	do
 		let index++
 		echo "$(lzdate)" [$$]: OpenVPN Subnet "${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
 	done
-	[ "${index}" = "0" ] && echo "$(lzdate)" [$$]: OpenVPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+	[ "${index}" = "0" ] && echo "$(lzdate)" [$$]: OpenVPN Server: Stopped | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+
+    if [ "${PPTPD_ENABLE}" = "1" ]; then
+        vpn_item="$( nvram get pptpd_clients | sed -n 1p )"
+        echo "$(lzdate)" [$$]: PPTP Client IP Pool: "${vpn_item}" | tee -ai "${SYSLOG}" 2> /dev/null
+    fi
 	index="0"
 	for vpn_item in $( echo "${ROUTE_LIST}" | grep pptp | awk '{print $1":"$3}' )
 	do
@@ -259,11 +276,13 @@ status_output() {
 	done
 	if [ "${index}" = "0" ]; then
 		if [ "${PPTPD_ENABLE}" != "1" ]; then
-			echo "$(lzdate)" [$$]: PPTP VPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+			echo "$(lzdate)" [$$]: PPTP VPN Server: Stopped | tee -ai "${SYSLOG}" 2> /dev/null
 		else
 			echo "$(lzdate)" [$$]: PPTP VPN Client: None | tee -ai "${SYSLOG}" 2> /dev/null
 		fi
 	fi
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+
 	if [ -n "${IPSEC_SUBNET_IP_SET}" ]; then
 		index="0"
 		for vpn_item in $( echo "${IPSEC_SUBNET_IP_SET}" | awk '{print $1":ipsec"}' )
@@ -272,8 +291,9 @@ status_output() {
 			echo "$(lzdate)" [$$]: IPSec VPN Subnet "${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
 		done
 	else
-		echo "$(lzdate)" [$$]: IPSec VPN Server: Stop | tee -ai "${SYSLOG}" 2> /dev/null
+		echo "$(lzdate)" [$$]: IPSec VPN Server: Stopped | tee -ai "${SYSLOG}" 2> /dev/null
 	fi
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 # -------------- Script Execution ---------------
@@ -296,6 +316,7 @@ get_data || {
 
 [ "${HAMMER}" != "${PATH_TMP%/*}/interface" ] && {
     echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
     echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
@@ -308,7 +329,7 @@ do
     set_sub_route
     set_vpn_rule
     set_balance_rule
-    status_output
+    print_status
 done
 
 unset_lock
