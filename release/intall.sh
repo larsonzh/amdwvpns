@@ -7,7 +7,7 @@
 # install script
 
 # Script command (e.g., in the parent directory of lzvpns directory)
-# JFFS partition:			./install.sh
+# JFFS partition:           ./install.sh
 # the Entware of USB disk:	./install.sh entware
 
 # BEIGIN
