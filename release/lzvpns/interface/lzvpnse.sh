@@ -9,6 +9,7 @@
 
 # --------------- Global Variable ---------------
 
+HAMMER="${1}"
 PATH_TMP="${0%/*}"
 [ "${PATH_TMP:0:1}" != '/' ] && PATH_TMP="$( pwd )${PATH_TMP#*.}"
 PATH_TMP="${PATH_TMP%/*}/tmp"
@@ -26,8 +27,6 @@ IPSEC_SERVER_ENABLE=0
 
 MATCH_SET='--match-set'
 
-HAMMER="${1}"
-MAIN="lzvpns"
 
 # ------------- Data Exchange Area --------------
 TRANSDATA=">>>>>>>>>"
@@ -77,14 +76,14 @@ get_data() {
 }
 
 set_lock() {
-    [ "${HAMMER}" = "${MAIN}" ] && return
+    [ "${HAMMER}" = "${PATH_TMP%/*}/interface" ] && return
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
     eval exec "${LOCK_FILE_ID}"<>"${LOCK_FILE}"
     flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 }
 
 unset_lock() {
-    [ "${HAMMER}" = "${MAIN}" ] && return
+    [ "${HAMMER}" = "${PATH_TMP%/*}/interface" ] && return
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
@@ -289,7 +288,7 @@ get_data || {
     SYSLOG="/tmp/syslog.log"
 }
 
-[ "${HAMMER}" = "${MAIN}" ] && {
+[ "${HAMMER}" = "${PATH_TMP%/*}/interface" ] && {
     echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
     echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
 }
