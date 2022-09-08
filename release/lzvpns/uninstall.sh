@@ -24,11 +24,24 @@ echo ----------------------------------------------------------------- | tee -ai
 
 if [ ! -f "${CURRENT_PATH}/lzvpns.sh" ]; then
     echo "$(lzdate)" [$$]: "${CURRENT_PATH}/lzvpns.sh" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
+    echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "  LZ script uninstallation failed." | tee -ai "${SYSLOG}" 2> /dev/null
+    echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 else
     chmod +x "${CURRENT_PATH}/lzvpns.sh" > /dev/null 2>&1
     sh "${CURRENT_PATH}/lzvpns.sh" stop
 fi
+
+sleep 1s
+
+rm -f "${CURRENT_PATH}/daemon/lzvpnsd.sh"
+rmdir "${CURRENT_PATH}/daemon" > /dev/null 2>&1
+rm -f "${CURRENT_PATH}/interface/lzvpnsd.sh"
+rmdir "${CURRENT_PATH}/interface" > /dev/null 2>&1
+rm -f "${CURRENT_PATH}/lzvpns.sh"
+rm -f "${CURRENT_PATH}/uninstall.sh"
+rmdir "${CURRENT_PATH}" > /dev/null 2>&1
 
 exit 0
 
