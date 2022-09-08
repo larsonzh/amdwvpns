@@ -2,7 +2,7 @@
 # install.sh v0.0.1
 # By LZ (larsonzhang@gmail.com)
 
-# LZ script for asuswrt/merlin based router
+# LZ VPNS script for asuswrt/merlin based router
 
 # Script command (e.g., in the parent directory of lzvpns directory)
 # JFFS partition            ./install.sh
