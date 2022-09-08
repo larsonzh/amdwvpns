@@ -119,8 +119,8 @@ fi
 
 echo "  Installation in progress..." | tee -ai "${SYSLOG}" 2> /dev/null
 
-PATH_LZ=${PATH_BASE}/lzvpns
-if ! mkdir -p "${PATH_LZ}"; then
+PATH_LZ="${PATH_BASE}/lzvpns"
+if ! mkdir -p "${PATH_LZ}" > /dev/null 2>&1; then
     echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
     echo "  Failed to create directory (${PATH_LZ})." | tee -ai "${SYSLOG}" 2> /dev/null
     echo "  The installation process exited." | tee -ai "${SYSLOG}" 2> /dev/null
@@ -130,28 +130,11 @@ if ! mkdir -p "${PATH_LZ}"; then
     exit 1
 fi
 
-PATH_INTERFACE="${PATH_LZ}/interface"
-PATH_DAEMON="${PATH_LZ}/daemon"
-
-mkdir -p "${PATH_INTERFACE}" > /dev/null 2>&1
-mkdir -p "${PATH_DAEMON}" > /dev/null 2>&1
-
-SUCCESS="1"
-while true
-do
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/lzvpns.sh" "${PATH_LZ}" > /dev/null 2>&1 && break
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/uninstall.sh" "${PATH_LZ}" > /dev/null 2>&1 && break
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/interface/lzvpnse.sh" "${PATH_INTERFACE}" > /dev/null 2>&1 && break
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/daemon/lzvpnsd.sh" "${PATH_DAEMON}" > /dev/null 2>&1 && break
-    SUCCESS="0"
-    break
-done
-
-if [ "${SUCCESS}" != "0" ]; then
-    rm -f "${PATH_DAEMON}/lzvpnsd.sh"
-    rmdir "${PATH_DAEMON}" > /dev/null 2>&1
-    rm -f "${PATH_INTERFACE}/lzvpnse.sh"
-    rmdir "${PATH_INTERFACE}" > /dev/null 2>&1
+if ! cp -rpf "${CURRENT_PATH}/lzvpns" "${PATH_BASE}" > /dev/null 2>&1; then
+    rm -f "${PATH_LZ}/daemon/lzvpnsd.sh"
+    rmdir "${PATH_LZ}/daemon" > /dev/null 2>&1
+    rm -f "${PATH_LZ}/interface/lzvpnse.sh"
+    rmdir "${PATH_LZ}/interface" > /dev/null 2>&1
     rm -f "${PATH_LZ}/lzvpns.sh"
     rm -f "${PATH_LZ}/uninstall.sh"
     rmdir "${PATH_LZ}" > /dev/null 2>&1
@@ -174,6 +157,7 @@ echo "  LZ VPNS script command: " | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Start/Restart Service   ${PATH_LZ}/lzvpns.sh" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Stop Service            ${PATH_LZ}/lzvpns.sh stop" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Forced unlocking        ${PATH_LZ}/lzvpns.sh unlock" | tee -ai "${SYSLOG}" 2> /dev/null
+echo "  Uninstall               ${PATH_LZ}/uninstall.sh" | tee -ai "${SYSLOG}" 2> /dev/null
 echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
 
