@@ -21,7 +21,7 @@ SYSLOG="/tmp/syslog.log"
 PATH_BASE=/jffs/scripts
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
-echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+echo -e "\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  LZ ${LZ_VERSION} installation script starts running..." | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  By LZ (larsonzhang@gmail.com)" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  $(lzdate)" | tee -ai "${SYSLOG}" 2> /dev/null
