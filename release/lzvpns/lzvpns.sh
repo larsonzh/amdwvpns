@@ -127,9 +127,9 @@ set_lock() {
 }
 
 forced_unlock() {
-    rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
+    rm -f "${INSTANCE_LIST}"
     if [ -f "${LOCK_FILE}" ]; then
-        rm -f "${LOCK_FILE}" > /dev/null 2>&1
+        rm -f "${LOCK_FILE}"
         echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked.
     else
         echo "$(lzdate)" [$$]: There is no program synchronization lock.
@@ -141,7 +141,7 @@ unset_lock() {
     [ "${HAMMER}" = "error" ] && return
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
     [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
-        rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
+        rm -f "${INSTANCE_LIST}"
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
@@ -188,7 +188,7 @@ clear_time_task() {
     fi
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
-    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}"
     echo "$(lzdate)" [$$]: The running scheduled tasks of this script have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
@@ -300,13 +300,13 @@ clear_all_event_interface() {
 
 delete_data_file() {
     if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
-        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}"
         echo "$(lzdate)" [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN event data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
-        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}"
         echo "$(lzdate)" [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN daemon data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -403,8 +403,8 @@ EOF_DAEMON_DATA
 update_data() {
     local TRANSDATA=
     if [ "${TRANSFER}" = "1" ]; then
-        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
-        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}"
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}"
         TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
         if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             clear_all_event_interface
@@ -471,7 +471,7 @@ sleep 1s
 if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
     cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
     sleep 1s
-    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT} > /dev/null 2>&1
+    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}
     lzdate() { eval echo "\$( date +"%F %T" )"; }
     echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
     echo "\$(lzdate)" [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
