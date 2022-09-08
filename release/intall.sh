@@ -90,7 +90,7 @@ if [ "${AVAL_SPACE}" != "Unknown" ] && [ "${SPACE_REQU}" != "Unknown" ]; then
     fi
 elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
     echo "  Available space is uncertain."
-    ! read -r -n1 -t ${TIMEOUT} -p "  Automatically terminate after ${TIMEOUT}s, continue? [Y/N] " ANSWER \
+    ! read -r -n1 -t "${TIMEOUT}" -p "  Automatically terminate after ${TIMEOUT}s, continue? [Y/N] " ANSWER \
     || [ -n "${ANSWER}" ] && echo -e "\r"
     case ${ANSWER} in
         Y | y)
