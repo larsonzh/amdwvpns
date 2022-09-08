@@ -142,6 +142,9 @@ if ! cp -rpf "${CURRENT_PATH}/lzvpns" "${PATH_BASE}" > /dev/null 2>&1; then
     echo "  Software installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
     echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
+else
+    cp -rpf "${CURRENT_PATH}/LICENSE" "${PATH_LZ}" > /dev/null 2>&1
+    cp -rpf "${CURRENT_PATH}/README.md" "${PATH_LZ}" > /dev/null 2>&1
 fi
 
 chmod 775 "${PATH_LZ}/lzvpns.sh" > /dev/null 2>&1
