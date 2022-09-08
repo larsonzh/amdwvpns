@@ -140,9 +140,9 @@ SUCCESS="1"
 while true
 do
     ! cp -rpf "${CURRENT_PATH}/lzvpns/lzvpns.sh" "${PATH_LZ}" > /dev/null 2>&1 && break
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/uninstall.sh" "${PATH_LZ}" > /dev/null 2>&1 $$ break
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/uninstall.sh" "${PATH_LZ}" > /dev/null 2>&1 && break
     ! cp -rpf "${CURRENT_PATH}/lzvpns/interface/lzvpnse.sh" "${PATH_INTERFACE}" > /dev/null 2>&1 && break
-    ! cp -rpf "${CURRENT_PATH}/lzvpns/daemon/lzvpnsd.sh" "${PATH_DAEMON}" > /dev/null 2>&1 $$ break
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/daemon/lzvpnsd.sh" "${PATH_DAEMON}" > /dev/null 2>&1 && break
     SUCCESS="0"
     break
 done
@@ -163,7 +163,7 @@ if [ "${SUCCESS}" != "0" ]; then
     exit 1
 fi
 
-chmod 775 "${PATH_LZ}"/lzvpns.sh > /dev/null 2>&1
+chmod 775 "${PATH_LZ}/lzvpns.sh" > /dev/null 2>&1
 chmod -R 775 "${PATH_LZ}" > /dev/null 2>&1
 
 echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
