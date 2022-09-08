@@ -16,26 +16,25 @@ CURRENT_PATH="${0%/*}"
 SYSLOG="/tmp/syslog.log"
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
-echo  | tee -ai "${SYSLOG}" 2> /dev/null
-echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  LZ ${LZ_VERSION} uninstall script starts running..." | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  By LZ (larsonzhang@gmail.com)" | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  $(lzdate)" | tee -ai "${SYSLOG}" 2> /dev/null
-echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo | tee -ai "${SYSLOG}" 2> /dev/null
 
-! read -r -n1 -t ${TIMEOUT} -p "  Automatically terminate after ${TIMEOUT}s, continue? [Y/N] " ANSWER \
+! read -r -n1 -t ${TIMEOUT} -p "  Automatically terminate after ${TIMEOUT}s, continue uninstallation? [Y/N] " ANSWER \
     || [ -n "${ANSWER}" ] && echo -e "\r"
 case ${ANSWER} in
     Y | y)
     {
-        echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+        echo | tee -ai "${SYSLOG}" 2> /dev/null
     }
     ;;
     *)
     {
-        echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+        echo | tee -ai "${SYSLOG}" 2> /dev/null
         echo "  LZ script uninstallation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-        echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
+        echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
         exit 1
     }
     ;;
@@ -43,9 +42,9 @@ esac
 
 if [ ! -f "${CURRENT_PATH}/lzvpns.sh" ]; then
     echo "$(lzdate)" [$$]: "${CURRENT_PATH}/lzvpns.sh" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
-    echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+    echo | tee -ai "${SYSLOG}" 2> /dev/null
     echo "  LZ script uninstallation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
+    echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 else
     chmod +x "${CURRENT_PATH}/lzvpns.sh" > /dev/null 2>&1
@@ -54,7 +53,7 @@ fi
 
 sleep 1s
 
-echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Uninstallation in progress..." | tee -ai "${SYSLOG}" 2> /dev/null
 
 rm -f "${CURRENT_PATH}/daemon/lzvpnsd.sh"
@@ -66,9 +65,9 @@ rm -f "${CURRENT_PATH}/lzvpns.sh"
 rm -f "${CURRENT_PATH}/uninstall.sh"
 rmdir "${CURRENT_PATH}" > /dev/null 2>&1
 
-echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Software uninstallation completed." | tee -ai "${SYSLOG}" 2> /dev/null
-echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
+echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
 
 exit 0
 
