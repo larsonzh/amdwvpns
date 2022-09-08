@@ -45,7 +45,7 @@ fi
 
 AVAL_SPACE=
 if [ "${1}" = "entware" ]; then
-    if which opkg 2> /dev/null; then
+    if which opkg > /dev/null 2>&1; then
         index=1
         while [ "${index}" -le "$( df | grep -c "^/dev/sda" )" ]
         do
