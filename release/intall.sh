@@ -136,9 +136,32 @@ PATH_DAEMON="${PATH_LZ}/daemon"
 mkdir -p "${PATH_INTERFACE}" > /dev/null 2>&1
 mkdir -p "${PATH_DAEMON}" > /dev/null 2>&1
 
-cp -rpf "${CURRENT_PATH}/lzvpns/lzvpns.sh" "${PATH_LZ}" > /dev/null 2>&1
-cp -rpf "${CURRENT_PATH}/lzvpns/interface" "${PATH_LZ}" > /dev/null 2>&1
-cp -rpf "${CURRENT_PATH}/lzvpns/daemon" "${PATH_LZ}" > /dev/null 2>&1
+SUCCESS="1"
+while true
+do
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/lzvpns.sh" "${PATH_LZ}" > /dev/null 2>&1 && break
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/uninstall.sh" "${PATH_LZ}" > /dev/null 2>&1 $$ break
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/interface/lzvpnse.sh" "${PATH_INTERFACE}" > /dev/null 2>&1 && break
+    ! cp -rpf "${CURRENT_PATH}/lzvpns/daemon/lzvpnsd.sh" "${PATH_DAEMON}" > /dev/null 2>&1 $$ break
+    SUCCESS="0"
+    break
+done
+
+if [ "${SUCCESS}" != "0" ]; then
+    rm -f "${PATH_DAEMON}/lzvpnsd.sh"
+    rmdir "${PATH_DAEMON}" > /dev/null 2>&1
+    rm -f "${PATH_INTERFACE}/lzvpnse.sh"
+    rmdir "${PATH_INTERFACE}" > /dev/null 2>&1
+    rm -f "${PATH_LZ}/lzvpns.sh"
+    rm -f "${PATH_LZ}/uninstall.sh"
+    rmdir "${PATH_LZ}" > /dev/null 2>&1
+
+    echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+    echo "  Software installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
+    echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
+
+    exit 1
+fi
 
 chmod 775 "${PATH_LZ}"/lzvpns.sh > /dev/null 2>&1
 chmod -R 775 "${PATH_LZ}" > /dev/null 2>&1
