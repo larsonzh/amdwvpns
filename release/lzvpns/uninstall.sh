@@ -35,6 +35,9 @@ fi
 
 sleep 1s
 
+echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo "  Uninstallation in progress..." | tee -ai "${SYSLOG}" 2> /dev/null
+
 rm -f "${CURRENT_PATH}/daemon/lzvpnsd.sh"
 rmdir "${CURRENT_PATH}/daemon" > /dev/null 2>&1
 rm -f "${CURRENT_PATH}/interface/lzvpnsd.sh"
@@ -42,6 +45,10 @@ rmdir "${CURRENT_PATH}/interface" > /dev/null 2>&1
 rm -f "${CURRENT_PATH}/lzvpns.sh"
 rm -f "${CURRENT_PATH}/uninstall.sh"
 rmdir "${CURRENT_PATH}" > /dev/null 2>&1
+
+echo ----------------------------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+echo "  Software uninstallation completed." | tee -ai "${SYSLOG}" 2> /dev/null
+echo -e "  $(lzdate)\n" | tee -ai "${SYSLOG}" 2> /dev/null
 
 exit 0
 
