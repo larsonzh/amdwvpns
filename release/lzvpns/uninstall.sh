@@ -26,6 +26,7 @@ if [ ! -f "${CURRENT_PATH}/lzvpns.sh" ]; then
     echo "$(lzdate)" [$$]: "${CURRENT_PATH}/lzvpns.sh" does not exist. | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 else
+    chmod +x "${CURRENT_PATH}/lzvpns.sh" > /dev/null 2>&1
     sh "${CURRENT_PATH}/lzvpns.sh" stop
 fi
 
