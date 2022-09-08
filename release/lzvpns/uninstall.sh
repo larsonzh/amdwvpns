@@ -61,6 +61,7 @@ rm -f "${CURRENT_PATH}/daemon/lzvpnsd.sh"
 rmdir "${CURRENT_PATH}/daemon" > /dev/null 2>&1
 rm -f "${CURRENT_PATH}/interface/lzvpnse.sh"
 rmdir "${CURRENT_PATH}/interface" > /dev/null 2>&1
+rmdir "${CURRENT_PATH}/tmp" > /dev/null 2>&1
 rm -f "${CURRENT_PATH}/lzvpns.sh"
 rm -f "${CURRENT_PATH}/uninstall.sh"
 rmdir "${CURRENT_PATH}" > /dev/null 2>&1
