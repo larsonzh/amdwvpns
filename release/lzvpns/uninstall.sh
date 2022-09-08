@@ -63,6 +63,8 @@ rmdir "${CURRENT_PATH}/interface" > /dev/null 2>&1
 rmdir "${CURRENT_PATH}/tmp" > /dev/null 2>&1
 rm -f "${CURRENT_PATH}/lzvpns.sh"
 rm -f "${CURRENT_PATH}/uninstall.sh"
+rm -f "${CURRENT_PATH}/LICENSE"
+rm -f "${CURRENT_PATH}/README.md"
 rmdir "${CURRENT_PATH}" > /dev/null 2>&1
 
 echo | tee -ai "${SYSLOG}" 2> /dev/null
