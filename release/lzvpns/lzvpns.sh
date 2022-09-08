@@ -8,6 +8,7 @@
 # Start/Restart Service     ./lzvpns.sh
 # Stop Service              ./lzvpns.sh stop
 # Forced Unlocking          ./lzvpns.sh unlock
+# Uninstall                 ./uninstall.sh
 
 
 # Main execution script
