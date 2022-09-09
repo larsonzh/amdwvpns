@@ -466,21 +466,20 @@ craeate_daemon_start_scripts() {
 [ ! -d ${PATH_LOCK} ] && { mkdir -p ${PATH_LOCK} > /dev/null 2>&1; chmod 777 ${PATH_LOCK} > /dev/null 2>&1; }
 exec $LOCK_FILE_ID<>${LOCK_FILE}; flock -x ${LOCK_FILE_ID} > /dev/null 2>&1;
 
+cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
+sleep 1s
 ipset -q destroy ${VPN_DAEMON_IP_SET_LOCK}
 ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
+sleep 1s
 nohup sh ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ${POLLING_TIME} > /dev/null 2>&1 &
 sleep 1s
-ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep && {
-    cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
-    sleep 1s
-    rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}
-    lzdate() { eval echo "\$( date +"%F %T" )"; }
-    echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon ------------- >> ${SYSLOG} 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: >> ${SYSLOG} 2> /dev/null
-}
+rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}
+lzdate() { eval echo "\$( date +"%F %T" )"; }
+echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
+echo "\$(lzdate)" [\$\$]: ----------------------------------------------- >> ${SYSLOG} 2> /dev/null
+echo "\$(lzdate)" [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
+echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon ------------- >> ${SYSLOG} 2> /dev/null
+echo "\$(lzdate)" [\$\$]: >> ${SYSLOG} 2> /dev/null
 
 flock -u ${LOCK_FILE_ID} > /dev/null 2>&1
 
