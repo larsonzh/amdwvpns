@@ -331,12 +331,12 @@ check_file() {
 }
 
 update_data_item() {
-    local data_item="$( grep -wo "${1}=.$" "${3}" > /dev/null 2>&1 | sed 's/\"//g' )"
-    [ -z "${data_item}" ] || return 1
-    [ "${data_item#*=}" != "${2}" ] && {
-        sed -i "s:${1}=.*$:${1}=\"${2}\":g" "${3}" > /dev/null 2>&1
-        data_item="$( grep -wo "${1}=.$" "${3}" > /dev/null 2>&1 | sed 's/\"//g' )"
-        [ "${data_item#*=}" != "${2}" ] && return 3
+    local data_item="$( grep -o "^.*${1}=.*$" "${3}" 2> /dev/null )"
+    [ -z "${data_item}" ] && return 1
+    [ "${data_item}" != "${1}=\"${2}\"" ] && {
+        sed -i "s:^.*${1}=.*$:${1}=\"${2}\":g" "${3}" > /dev/null 2>&1
+        data_item="$( grep -o "^${1}=.*$" "${3}" 2> /dev/null )"
+        [ "${data_item#*=}" != "\"${2}\"" ] && return 3
         return 2
     }
     return 0
