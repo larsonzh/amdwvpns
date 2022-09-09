@@ -332,6 +332,7 @@ do
     set_vpn_rule
     set_balance_rule
     print_status
+    break
 done
 
 unset_lock
