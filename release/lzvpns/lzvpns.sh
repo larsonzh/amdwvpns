@@ -516,8 +516,8 @@ EOF_INTERFACE
     if ! grep -qm 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"; then
         sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     else
-        [ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
-            sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+        ! grep -qm 1 '^#!/bin/sh' "${PATH_BOOTLOADER}/${1}" && \
+            sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1/g' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     if ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}"; then
         sed -i "/${3}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
