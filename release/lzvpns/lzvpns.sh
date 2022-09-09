@@ -458,6 +458,7 @@ set_wan_access_port() {
 
 craeate_daemon_start_scripts() {
     cat > "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" 2> /dev/null <<EOF_START_DAEMON_SCRIPT
+#!/bin/sh
 # ${VPN_DAEMON_START_SCRIPT} ${LZ_VERSION}
 # By LZ (larsonzhang@gmail.com)
 # Do not manually modify!!!
@@ -469,7 +470,7 @@ ipset -q destroy ${VPN_DAEMON_IP_SET_LOCK}
 ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
 nohup sh ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ${POLLING_TIME} > /dev/null 2>&1 &
 sleep 1s
-if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
+ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep && {
     cru d ${START_DAEMON_TIMEER_ID} > /dev/null 2>&1
     sleep 1s
     rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}
@@ -479,7 +480,7 @@ if ps | grep ${VPN_DAEMON_SCRIPTS} | grep -qv grep; then
     echo "\$(lzdate)" [\$\$]: The VPN daemon has been started again. >> ${SYSLOG} 2> /dev/null
     echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon ------------- >> ${SYSLOG} 2> /dev/null
     echo "\$(lzdate)" [\$\$]: >> ${SYSLOG} 2> /dev/null
-fi
+}
 
 flock -u ${LOCK_FILE_ID} > /dev/null 2>&1
 
