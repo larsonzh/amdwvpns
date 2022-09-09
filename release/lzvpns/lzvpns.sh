@@ -496,7 +496,7 @@ start_daemon() {
     craeate_daemon_start_scripts
 
     [ -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" ] \
-        && cru a ${START_DAEMON_TIMEER_ID} "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
+        && cru a "${START_DAEMON_TIMEER_ID}" "*/1 * * * * /bin/sh ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
 
     if ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -qv grep; then
         echo "$(lzdate)" [$$]: The VPN daemon has been started. | tee -ai "${SYSLOG}" 2> /dev/null
