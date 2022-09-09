@@ -285,9 +285,9 @@ print_status() {
     fi
     echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 
-    if [ -n "${IPSEC_SUBNET_IP_SET}" ]; then
+    if [ -n "${IPSEC_SUBNET_LIST}" ]; then
         index="0"
-        for vpn_item in $( echo "${IPSEC_SUBNET_IP_SET}" | awk '{print $1":ipsec"}' )
+        for vpn_item in $( echo "${IPSEC_SUBNET_LIST}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' | awk '{print $1":ipsec"}' )
         do
             let index++
             echo "$(lzdate)" [$$]: "   IPSec VPN Subnet ${index}: ${vpn_item/:/ }" | tee -ai "${SYSLOG}" 2> /dev/null
