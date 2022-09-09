@@ -71,8 +71,6 @@ echo | tee -ai "${SYSLOG}" 2> /dev/null
 echo "  Software uninstallation completed." | tee -ai "${SYSLOG}" 2> /dev/null
 echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
 
-cd "${CURRENT_PATH%/*}" || exit 0
-
 exit 0
 
 # END
