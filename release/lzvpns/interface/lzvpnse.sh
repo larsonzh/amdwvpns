@@ -84,7 +84,7 @@ get_data() {
 set_lock() {
     [ "${HAMMER}" = "${PATH_TMP%/*}/interface" ] && return
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
-    eval exec "${LOCK_FILE_ID}"<>"${LOCK_FILE}"
+    eval "exec ${LOCK_FILE_ID}<>${LOCK_FILE}"
     flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 }
 
