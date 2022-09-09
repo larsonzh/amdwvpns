@@ -50,7 +50,7 @@ if [ "${1}" = "entware" ]; then
         do
             if df | grep -w "^/dev/sda${index}" | awk '{print $6}' | xargs -I {} ls -al {} | grep -qo "entware"; then
                 AVAL_SPACE=$( df | grep -w "^/dev/sda${index}" | awk '{print $4}' )
-                if which opkg 2> /dev/null | grep -qwo '^[\/]opt' && [ -d "/opt/home" ]; then
+                if which opkg > /dev/null 2>&1 | grep -qwo '^[\/]opt' && [ -d "/opt/home" ]; then
                     PATH_BASE="/opt/home"
                 else
                     PATH_BASE="$( df | grep -w "^/dev/sda${index}" | awk '{print $6}' )/entware/home"
