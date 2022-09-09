@@ -447,7 +447,7 @@ set_wan_access_port() {
     ip rule add from "${router_local_ip}" table "${access_wan}" prio "${IP_RULE_PRIO_HOST}" > /dev/null 2>&1
     ip route flush cache > /dev/null 2>&1
     if ip rule list prio "${IP_RULE_PRIO_HOST}" | grep -v all | grep -q "${router_local_ip}" \
-        && ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep "${router_local_ip}"; then
+        && ip rule list prio "${IP_RULE_PRIO_HOST}" | grep all | grep -q "${router_local_ip}"; then
         echo "$(lzdate)" [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: WAN access port configuration failed. | tee -ai "${SYSLOG}" 2> /dev/null
