@@ -363,17 +363,17 @@ consistency_update() {
 
 trans_event_data() {
     cat > "${PATH_TMP}/${VPN_DATA_FILE}" 2> /dev/null <<EOF_EVENT_DATA
-"${LZ_VERSION}"
-"${WAN_ACCESS_PORT}"
-"${VPN_WAN_PORT}"
-"${POLLING_TIME}"
-"${WAN0}"
-"${WAN1}"
-"${IP_RULE_PRIO_VPN}"
-"${OVPN_SUBNET_IP_SET}"
-"${PPTP_CLIENT_IP_SET}"
-"${IPSEC_SUBNET_IP_SET}"
-"${SYSLOG}"
+${LZ_VERSION}
+${WAN_ACCESS_PORT}
+${VPN_WAN_PORT}
+${POLLING_TIME}
+${WAN0}
+${WAN1}
+${IP_RULE_PRIO_VPN}
+${OVPN_SUBNET_IP_SET}
+${PPTP_CLIENT_IP_SET}
+${IPSEC_SUBNET_IP_SET}
+${SYSLOG}
 EOF_EVENT_DATA
     [ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && {
         echo "$(lzdate)" [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -385,13 +385,13 @@ EOF_EVENT_DATA
 
 trans_daemon_data() {
     cat > "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" 2> /dev/null <<EOF_DAEMON_DATA
-"${POLLING_TIME}"
-"${WAN0}"
-"${WAN1}"
-"${VPN_EVENT_INTERFACE_SCRIPTS}"
-"${PPTP_CLIENT_IP_SET}"
-"${IPSEC_SUBNET_IP_SET}"
-"${VPN_DAEMON_IP_SET_LOCK}"
+${POLLING_TIME}
+${WAN0}
+${WAN1}
+${VPN_EVENT_INTERFACE_SCRIPTS}
+${PPTP_CLIENT_IP_SET}
+${IPSEC_SUBNET_IP_SET}
+${VPN_DAEMON_IP_SET_LOCK}
 EOF_DAEMON_DATA
     [ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && {
         echo "$(lzdate)" [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
