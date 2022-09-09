@@ -143,7 +143,7 @@ do
             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
                 sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
         fi
-    elif ipset -q list $IPSEC_SUBNET_IP_SET | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
+    elif ipset -q list "${IPSEC_SUBNET_IP_SET}" | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
         [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
             sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     fi
