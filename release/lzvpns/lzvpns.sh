@@ -625,7 +625,7 @@ echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee
 echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev/null
 echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
 
-while ture
+while true
 do
     command_parsing || break
     set_lock || break
