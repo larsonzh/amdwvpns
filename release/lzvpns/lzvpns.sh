@@ -488,7 +488,7 @@ EOF_START_DAEMON_SCRIPT
 }
 
 start_daemon() {
-    ! which nohup 2> /dev/null && return
+    ! which nohup > /dev/null 2>&1 && return
     [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
 
     nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
@@ -513,18 +513,18 @@ create_event_interface() {
 EOF_INTERFACE
     fi
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
-    if grep -qm 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"; then
+    if ! grep -qm 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"; then
         sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     else
         [ "$( grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" )" != "#!/bin/sh" ] && \
-            sed -i 'l1 s:^.*#!/bin/sh:#!/bin/sh:' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+            sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     if ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}"; then
         sed -i "/${3}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
         sed -i "\$a ${2}/${3} # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-    ! grep "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return 1
+    ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return 1
     return 0
 }
 
@@ -549,7 +549,7 @@ register_event_interface() {
         return 1
     fi
     if create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"; then
-        "$(lzdate)" [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "$(lzdate)" [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: VPN event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
         clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}" \
