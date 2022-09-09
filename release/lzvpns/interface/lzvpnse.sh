@@ -138,7 +138,7 @@ set_vpn_rule() {
     [ "${VPN_WAN_PORT}" = "0" ] && vpn_wan="${WAN0}"
     [ "${VPN_WAN_PORT}" = "1" ] && vpn_wan="${WAN1}"
     [ -z "${vpn_wan}" ] && return
-    echo "${ROUTE_LIST}" | grep -E 'pptp|tup|tap' | awk '{print $1}' \
+    echo "${ROUTE_LIST}" | grep -E 'pptp|tun|tap' | awk '{print $1}' \
         | sed "s/^.*$/ip rule add from & table ${vpn_wan} prio ${IP_RULE_PRIO_VPN}/g" \
         | awk '{system($0" > /dev/null 2>&1")}'
     echo "${IPSEC_SUBNET_LIST}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' \
