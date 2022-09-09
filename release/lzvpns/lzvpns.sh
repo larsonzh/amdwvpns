@@ -243,7 +243,7 @@ restore_routing_table() {
 restore_balance_chain() {
     ! iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return
     local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
-            | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|$IPSEC_SUBNET_IP_SET}" \
+            | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|${IPSEC_SUBNET_IP_SET}" \
             | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
     [ -z "${number}" ] && {
         echo "$(lzdate)" [$$]: None of VPN item in the balance chain. | tee -ai "${SYSLOG}" 2> /dev/null
