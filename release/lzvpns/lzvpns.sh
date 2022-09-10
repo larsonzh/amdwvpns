@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpns.sh v0.0.1
+# lzvpns.sh v1.0.0
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -33,7 +33,7 @@ POLLING_TIME=3
 
 # --------------- Global Variable ---------------
 
-LZ_VERSION=v0.0.1
+LZ_VERSION=v1.0.0
 
 # System event log file
 SYSLOG="/tmp/syslog.log"
