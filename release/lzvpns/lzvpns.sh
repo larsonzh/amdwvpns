@@ -470,8 +470,8 @@ ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
 ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
 sleep 1s
 ! ps 2> /dev/null | grep "${VPN_DAEMON_SCRIPTS}" | grep -qv grep && {
-    nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
+    nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
     sleep 1s
     rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}"
     lzdate() { eval echo "\$( date +"%F %T" )"; }
