@@ -471,7 +471,7 @@ sleep 1s
 ipset -q destroy ${VPN_DAEMON_IP_SET_LOCK}
 ps | grep ${VPN_DAEMON_SCRIPTS} | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
 sleep 1s
-nohup sh ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ${POLLING_TIME} > /dev/null 2>&1 &
+nohup /bin/sh ${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS} ${POLLING_TIME} > /dev/null 2>&1 &
 sleep 1s
 rm -f ${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}
 lzdate() { eval echo "\$( date +"%F %T" )"; }
@@ -491,7 +491,7 @@ start_daemon() {
     ! which nohup > /dev/null 2>&1 && return
     [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
 
-    nohup sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
+    nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
  
     craeate_daemon_start_scripts
 
@@ -609,7 +609,7 @@ start_service() {
     detect_dual_wan || return 1
     echo "$(lzdate)" [$$]: Start LZ VPN support service...... | tee -ai "${SYSLOG}" 2> /dev/null
     set_wan_access_port
-    sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "${PATH_INTERFACE}"
+    /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "${PATH_INTERFACE}"
     start_daemon
     register_event_interface || return 1
     echo "$(lzdate)" [$$]: LZ VPN support service started successfully. | tee -ai "${SYSLOG}" 2> /dev/null
