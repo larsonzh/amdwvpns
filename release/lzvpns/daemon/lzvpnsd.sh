@@ -90,7 +90,7 @@ do
         PPTPD_ENABLE="$( nvram get pptpd_enable )"
         if [ "${PPTPD_ENABLE}" != "1"  ]; then
             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-                sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+                /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
         else
             VPN_CLIENT=""
             VPN_CLIENT_LIST=$( ip route list | grep pptp | awk '{print $1}' )
@@ -117,13 +117,13 @@ do
                 fi
                 if [ -z "${VPN_CLIENT}" ]; then
                     [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-                        sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+                        /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
                 else
                     for VPN_CLIENT in $( ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -Eo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' )
                     do
                         if ! echo "${VPN_CLIENT_LIST}" | grep -q "${VPN_CLIENT}"; then
                             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-                                sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+                                /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
                             break
                         fi
                     done
@@ -131,7 +131,7 @@ do
             else
                 if ipset -q list "${PPTP_CLIENT_IP_SET}" | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
                     [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-                        sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+                        /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
                 fi
             fi
         fi
@@ -141,11 +141,11 @@ do
         IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
         if [ "${IPSEC_SERVER_ENABLE}" != "1" ]; then
             [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-                sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+                /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
         fi
     elif ipset -q list "${IPSEC_SUBNET_IP_SET}" | grep -qEo '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}'; then
         [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && \
-            sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+            /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
     fi
 
     [ "${PPTPD_ENABLE}" != "1" ] && [ "${IPSEC_SERVER_ENABLE}" != "1" ] && break
