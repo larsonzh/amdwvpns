@@ -48,7 +48,7 @@ if [ ! -f "${CURRENT_PATH}/lzvpns.sh" ]; then
     exit 1
 else
     chmod +x "${CURRENT_PATH}/lzvpns.sh" > /dev/null 2>&1
-    sh "${CURRENT_PATH}/lzvpns.sh" stop
+    /bin/sh "${CURRENT_PATH}/lzvpns.sh" stop
 fi
 
 sleep 1s
