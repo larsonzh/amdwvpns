@@ -26,7 +26,7 @@ WAN_ACCESS_PORT=0
 # 0--Primary WAN (Default), 1--Secondary WAN, Other--System Allocation
 VPN_WAN_PORT=0
 
-# Polling time for detecting and maintaining VPN service status.
+# Polling time for detecting and maintaining PPTP/IPSec VPN service status.
 # 1~10s (The default is 3 seconds)
 POLLING_TIME=3
 
