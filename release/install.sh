@@ -18,7 +18,7 @@ TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
 SYSLOG="/tmp/syslog.log"
-PATH_BASE=/jffs/scripts
+PATH_BASE="/jffs/scripts"
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
 echo -e "\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
@@ -33,7 +33,7 @@ if [ -z "${USER}" ]; then
     echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
     echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
-elif [ "${USER}" = root ]; then
+elif [ "${USER}" = "root" ]; then
     echo "  The root user can\'t install this software." | tee -ai "${SYSLOG}" 2> /dev/null
     echo "  Please log in with a different name." | tee -ai "${SYSLOG}" 2> /dev/null
     echo | tee -ai "${SYSLOG}" 2> /dev/null
@@ -45,12 +45,12 @@ fi
 AVAL_SPACE=
 if [ "${1}" = "entware" ]; then
     if which opkg > /dev/null 2>&1; then
-        index=1
+        index="1"
         while [ "${index}" -le "$( df | grep -c "^/dev/sda" )" ]
         do
             if df | grep -w "^/dev/sda${index}" | awk '{print $6}' | xargs -I {} ls -al {} | grep -qo "entware"; then
                 AVAL_SPACE=$( df | grep -w "^/dev/sda${index}" | awk '{print $4}' )
-                if which opkg > /dev/null 2>&1 | grep -qwo '^[\/]opt' && [ -d "/opt/home" ]; then
+                if which opkg 2> /dev/null | grep -qwo '^[\/]opt' && [ -d "/opt/home" ]; then
                     PATH_BASE="/opt/home"
                 else
                     PATH_BASE="$( df | grep -w "^/dev/sda${index}" | awk '{print $6}' )/entware/home"
@@ -68,10 +68,10 @@ if [ "${1}" = "entware" ]; then
         exit 1
     fi
 else
-    AVAL_SPACE=$( df | grep -w "/jffs" | awk '{print $4}' )
+    AVAL_SPACE="$( df | grep -w "/jffs" | awk '{print $4}' )"
 fi
 
-SPACE_REQU=$( du -s "${CURRENT_PATH}" | awk '{print $1}' )
+SPACE_REQU="$( du -s "${CURRENT_PATH}" | awk '{print $1}' )"
 
 [ -n "${AVAL_SPACE}" ] && AVAL_SPACE="${AVAL_SPACE} KB" || AVAL_SPACE="Unknown"
 [ -n "${SPACE_REQU}" ] && SPACE_REQU="${SPACE_REQU} KB" || SPACE_REQU="Unknown"
