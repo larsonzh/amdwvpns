@@ -120,7 +120,7 @@ set_lock() {
     sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
     if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
         [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
-            echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance.
+            echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance. | tee -ai "${SYSLOG}" 2> /dev/null
             return 1
         }
     fi
@@ -131,9 +131,9 @@ forced_unlock() {
     rm -f "${INSTANCE_LIST}"
     if [ -f "${LOCK_FILE}" ]; then
         rm -f "${LOCK_FILE}"
-        echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked.
+        echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked. | tee -ai "${SYSLOG}" 2> /dev/null
     else
-        echo "$(lzdate)" [$$]: There is no program synchronization lock.
+        echo "$(lzdate)" [$$]: There is no program synchronization lock. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     return 0
 }
@@ -167,8 +167,8 @@ cleaning_user_data() {
     str="5s"
     [ "${POLLING_TIME}" -ge "0" ] && [ "${POLLING_TIME}" -le "10" ] && str="${POLLING_TIME}s"
     echo "$(lzdate)" [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
-    [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT=0
-    [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ] && POLLING_TIME=3
+    [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT="0"
+    [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ] && POLLING_TIME="3"
 }
 
 clear_daemon() {
