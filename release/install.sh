@@ -61,7 +61,7 @@ if [ "${1}" = "entware" ]; then
                     if which opkg 2> /dev/null | grep -qwo '^[\/]opt' && [ -d "/opt/home" ]; then
                         PATH_BASE="/opt/home"
                     else
-                        PATH_BASE="$( df | grep -w "^/dev/sda${index}" | awk '{print $6}' )/entware/home"
+                        PATH_BASE="$( df | awk '$1 ~ "'"^\/dev\/sda${index}$"'" {print $6}' )/entware/home"
                     fi
                     break
                 fi
