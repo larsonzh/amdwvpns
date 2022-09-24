@@ -514,10 +514,10 @@ create_event_interface() {
 EOF_INTERFACE
     fi
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
-    if ! grep -qm 1 '#!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"; then
+    if ! grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" | grep -q "#!/bin/sh"; then
         sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     else
-        ! grep -qm 1 '^#!/bin/sh' "${PATH_BOOTLOADER}/${1}" \
+        ! grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" | grep -q "^#!/bin/sh" \
             && sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1/g' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
     fi
     if ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}"; then
