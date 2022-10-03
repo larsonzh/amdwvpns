@@ -1,5 +1,5 @@
 #!/bin/sh
-# install.sh v1.0.0
+# install.sh v1.0.1
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -13,7 +13,7 @@
 
 # BEIGIN
 
-LZ_VERSION=v1.0.0
+LZ_VERSION=v1.0.1
 TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
@@ -21,24 +21,30 @@ SYSLOG="/tmp/syslog.log"
 PATH_BASE="/jffs/scripts"
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
-echo -e "\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  LZ ${LZ_VERSION} installation script starts running..." | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  By LZ (larsonzhang@gmail.com)" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  $(lzdate)" | tee -ai "${SYSLOG}" 2> /dev/null
-echo | tee -ai "${SYSLOG}" 2> /dev/null
+{
+    echo -e "\n\n"
+    echo "  LZ ${LZ_VERSION} installation script starts running..."
+    echo "  By LZ (larsonzhang@gmail.com)"
+    echo "  $(lzdate)"
+    echo
+} | tee -ai "${SYSLOG}" 2> /dev/null
 
 if [ -z "${USER}" ]; then
-    echo "  The user name is empty and can\'t continue." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo "  The user name is empty and can\'t continue."
+        echo
+        echo "  LZ script installation failed."
+        echo -e "  $(lzdate)\n\n"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 elif [ "${USER}" = "root" ]; then
-    echo "  The root user can\'t install this software." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  Please log in with a different name." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo "  The root user can\'t install this software."
+        echo "  Please log in with a different name."
+        echo
+        echo "  LZ script installation failed."
+        echo -e "  $(lzdate)\n\n"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 fi
 
@@ -59,10 +65,12 @@ if [ "${1}" = "entware" ]; then
         done
     fi
     if [ -z "${AVAL_SPACE}" ]; then
-        echo "  Entware can\'t be used or doesn\'t exist." | tee -ai "${SYSLOG}" 2> /dev/null
-        echo | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-        echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+        {
+            echo "  Entware can\'t be used or doesn\'t exist."
+            echo
+            echo "  LZ script installation failed."
+            echo -e "  $(lzdate)\n\n"
+        } | tee -ai "${SYSLOG}" 2> /dev/null
         exit 1
     fi
 else
@@ -74,15 +82,19 @@ SPACE_REQU="$( du -s "${CURRENT_PATH}" | awk '{print $1}' )"
 [ -n "${AVAL_SPACE}" ] && AVAL_SPACE="${AVAL_SPACE} KB" || AVAL_SPACE="Unknown"
 [ -n "${SPACE_REQU}" ] && SPACE_REQU="${SPACE_REQU} KB" || SPACE_REQU="Unknown"
 
-echo -e "  Available space: ${AVAL_SPACE}\tSpace required: ${SPACE_REQU}" | tee -ai "${SYSLOG}" 2> /dev/null
-echo | tee -ai "${SYSLOG}" 2> /dev/null
+{
+    echo -e "  Available space: ${AVAL_SPACE}\tSpace required: ${SPACE_REQU}"
+    echo
+} | tee -ai "${SYSLOG}" 2> /dev/null
 
 if [ "${AVAL_SPACE}" != "Unknown" ] && [ "${SPACE_REQU}" != "Unknown" ]; then
     if [ "${AVAL_SPACE% KB*}" -le "${SPACE_REQU% KB*}" ]; then
-        echo "  Insufficient free space to install." | tee -ai "${SYSLOG}" 2> /dev/null
-        echo | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-        echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+        {
+            echo "  Insufficient free space to install."
+            echo
+            echo "  LZ script installation failed."
+            echo -e "  $(lzdate)\n\n"
+        } | tee -ai "${SYSLOG}" 2> /dev/null
         exit 1
     fi
 elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
@@ -97,17 +109,21 @@ elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
         ;;
         N | n)
         {
-            echo | tee -ai "${SYSLOG}" 2> /dev/null
-            echo "  The installation was terminated by the current user." | tee -ai "${SYSLOG}" 2> /dev/null
-            echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+            {
+                echo
+                echo "  The installation was terminated by the current user."
+                echo -e "  $(lzdate)\n\n"
+            } | tee -ai "${SYSLOG}" 2> /dev/null
             exit 1
         }
         ;;
         *)
         {
-            echo | tee -ai "${SYSLOG}" 2> /dev/null
-            echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-            echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+            {
+                echo
+                echo "  LZ script installation failed."
+                echo -e "  $(lzdate)\n\n"
+            } | tee -ai "${SYSLOG}" 2> /dev/null
             exit 1
         }
         ;;
@@ -118,27 +134,31 @@ echo "  Installation in progress..." | tee -ai "${SYSLOG}" 2> /dev/null
 
 PATH_LZ="${PATH_BASE}/lzvpns"
 if ! mkdir -p "${PATH_LZ}" > /dev/null 2>&1; then
-    echo | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  Failed to create directory (${PATH_LZ})." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  The installation process exited." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  LZ script installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo | tee -ai "${SYSLOG}" 2> /dev/null
+        echo "  Failed to create directory (${PATH_LZ})."
+        echo "  The installation process exited."
+        echo
+        echo "  LZ script installation failed."
+        echo -e "  $(lzdate)\n\n"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 fi
 
 if ! cp -rpf "${CURRENT_PATH}/lzvpns" "${PATH_BASE}" > /dev/null 2>&1; then
-    rm -f "${PATH_LZ}/daemon/lzvpnsd.sh"
+    rm -f "${PATH_LZ}/daemon/lzvpnsd.sh" > /dev/null 2>&1
     rmdir "${PATH_LZ}/daemon" > /dev/null 2>&1
-    rm -f "${PATH_LZ}/interface/lzvpnse.sh"
+    rm -f "${PATH_LZ}/interface/lzvpnse.sh" > /dev/null 2>&1
     rmdir "${PATH_LZ}/interface" > /dev/null 2>&1
-    rm -f "${PATH_LZ}/lzvpns.sh"
-    rm -f "${PATH_LZ}/uninstall.sh"
+    rm -f "${PATH_LZ}/lzvpns.sh" > /dev/null 2>&1
+    rm -f "${PATH_LZ}/uninstall.sh" > /dev/null 2>&1
     rmdir "${PATH_LZ}" > /dev/null 2>&1
 
-    echo | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "  Software installation failed." | tee -ai "${SYSLOG}" 2> /dev/null
-    echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo
+        echo "  Software installation failed."
+        echo -e "  $(lzdate)\n\n"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
     exit 1
 else
     cp -rpf "${CURRENT_PATH}/LICENSE" "${PATH_LZ}" > /dev/null 2>&1
@@ -148,18 +168,20 @@ fi
 chmod 775 "${PATH_LZ}/lzvpns.sh" > /dev/null 2>&1
 chmod -R 775 "${PATH_LZ}" > /dev/null 2>&1
 
-echo | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  Installed script path: ${PATH_BASE}" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  The software installation has been completed." | tee -ai "${SYSLOG}" 2> /dev/null
-echo | tee -ai "${SYSLOG}" 2> /dev/null
-echo "               LZ VPNS Script Command" | tee -ai "${SYSLOG}" 2> /dev/null
-echo | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  Start/Restart Service   ${PATH_LZ}/lzvpns.sh" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  Stop Service            ${PATH_LZ}/lzvpns.sh stop" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  Forced Unlocking        ${PATH_LZ}/lzvpns.sh unlock" | tee -ai "${SYSLOG}" 2> /dev/null
-echo "  Uninstall               ${PATH_LZ}/uninstall.sh" | tee -ai "${SYSLOG}" 2> /dev/null
-echo | tee -ai "${SYSLOG}" 2> /dev/null
-echo -e "  $(lzdate)\n\n" | tee -ai "${SYSLOG}" 2> /dev/null
+{
+    echo
+    echo "  Installed script path: ${PATH_BASE}"
+    echo "  The software installation has been completed."
+    echo
+    echo "               LZ VPNS Script Command"
+    echo
+    echo "  Start/Restart Service   ${PATH_LZ}/lzvpns.sh"
+    echo "  Stop Service            ${PATH_LZ}/lzvpns.sh stop"
+    echo "  Forced Unlocking        ${PATH_LZ}/lzvpns.sh unlock"
+    echo "  Uninstall               ${PATH_LZ}/uninstall.sh"
+    echo
+    echo -e "  $(lzdate)\n\n"
+} | tee -ai "${SYSLOG}" 2> /dev/null
 
 exit 0
 
