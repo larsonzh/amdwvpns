@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnse.sh v1.0.0
+# lzvpnse.sh v1.0.1
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -247,15 +247,19 @@ set_balance_rule() {
 print_status() {
     local vpn_item="Primary WAN"
     [ "${WAN_ACCESS_PORT}" = "1" ] && vpn_item="Secondary WAN"
-    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "$(lzdate)" [$$]: "   WAN Access Host Port: ${vpn_item}" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+        echo "$(lzdate)" [$$]: "   WAN Access Host Port: ${vpn_item}"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
 
     vpn_item="System Allocation"
     [ "${VPN_WAN_PORT}" = "0" ] && vpn_item="Primary WAN"
     [ "${VPN_WAN_PORT}" = "1" ] && vpn_item="Secondary WAN"
-    echo "$(lzdate)" [$$]: "   VPN Client WAN Port: ${vpn_item}" | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "$(lzdate)" [$$]: "   Polling Detection Time: ${POLLING_TIME}s" | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo "$(lzdate)" [$$]: "   VPN Client WAN Port: ${vpn_item}"
+        echo "$(lzdate)" [$$]: "   Polling Detection Time: ${POLLING_TIME}s"
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+    } | tee -ai "${SYSLOG}" 2> /dev/null
 
     local index="0"
     for vpn_item in $( echo "${ROUTE_LIST}" | grep -E 'tun|tap' | awk '{print $1":"$3}' )
@@ -303,7 +307,7 @@ print_status() {
 set_lock
 
 get_data || {
-    LZ_VERSION=v1.0.0
+    LZ_VERSION=v1.0.1
     WAN_ACCESS_PORT=0
     VPN_WAN_PORT=0
     POLLING_TIME=3
@@ -317,9 +321,11 @@ get_data || {
 }
 
 [ "${HAMMER}" != "${PATH_TMP%/*}/interface" ] && {
-    echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-    echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}" | tee -ai "${SYSLOG}" 2> /dev/null
+    {
+        echo "$(lzdate)" [$$]:
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+        echo "$(lzdate)" [$$]: Running LZ VPNS Event Handling Process "${LZ_VERSION}"
+    } | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
 while true
