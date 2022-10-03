@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpns.sh v1.0.0
+# lzvpns.sh v1.0.1
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -33,7 +33,7 @@ POLLING_TIME=3
 
 # --------------- Global Variable ---------------
 
-LZ_VERSION=v1.0.0
+LZ_VERSION=v1.0.1
 
 # System event log file
 SYSLOG="/tmp/syslog.log"
@@ -118,7 +118,7 @@ set_lock() {
     eval "exec ${LOCK_FILE_ID}<>${LOCK_FILE}"
     flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1
     sed -i -e '/^$/d' -e '/^[ ]*$/d' -e '1d' "${INSTANCE_LIST}" > /dev/null 2>&1
-    if [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -gt "0" ]; then
+    if grep -q 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null; then
         [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
             echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance. | tee -ai "${SYSLOG}" 2> /dev/null
             return 1
@@ -128,9 +128,9 @@ set_lock() {
 }
 
 forced_unlock() {
-    rm -f "${INSTANCE_LIST}"
+    rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
     if [ -f "${LOCK_FILE}" ]; then
-        rm -f "${LOCK_FILE}"
+        rm -f "${LOCK_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Program synchronization lock has been successfully unlocked. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: There is no program synchronization lock. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -141,9 +141,8 @@ forced_unlock() {
 unset_lock() {
     [ "${HAMMER}" = "error" ] && return
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && forced_unlock && return
-    [ "$( grep -c 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null )" -le "0" ] && \
-        rm -f "${INSTANCE_LIST}"
-    flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
+    [ -f "${INSTANCE_LIST}" ] && ! grep -q 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null && rm -f "${INSTANCE_LIST}" > /dev/null 2>&1
+    [ -f "${LOCK_FILE}" ] && flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
 command_parsing() {
@@ -189,7 +188,7 @@ clear_time_task() {
     fi
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     sleep 1s
-    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}"
+    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
     echo "$(lzdate)" [$$]: The running scheduled tasks of this script have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
@@ -301,13 +300,13 @@ clear_all_event_interface() {
 
 delete_data_file() {
     if [ -f "${PATH_TMP}/${VPN_DATA_FILE}" ]; then
-        rm -f "${PATH_TMP}/${VPN_DATA_FILE}"
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Deleted VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN event data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
     if [ -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ]; then
-        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}"
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         echo "$(lzdate)" [$$]: Deleted VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: No VPN daemon data exchange file to delete. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -346,15 +345,19 @@ consistency_update() {
     update_data_item "${1}" "${2}" "${3}"
     local retval="${?}"
     if [ "${retval}" = "1" ]; then
-        echo "$(lzdate)" [$$]: Missing data item "${1}" in VPN "${4}" script file. | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "$(lzdate)" [$$]: Data item consistency confirmation in VPN "${4}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        {
+            echo "$(lzdate)" [$$]: Missing data item "${1}" in VPN "${4}" script file.
+            echo "$(lzdate)" [$$]: Data item consistency confirmation in VPN "${4}" script file failed.
+            echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started.
+        } | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     elif [ "${retval}" = "2" ]; then
         echo "$(lzdate)" [$$]: The data item "${1}" in VPN "${4}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ "${retval}" = "3" ]; then
-        echo "$(lzdate)" [$$]: Update of data item "${1}" in VPN "${4}" script file failed. | tee -ai "${SYSLOG}" 2> /dev/null
-        echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
+        {
+            echo "$(lzdate)" [$$]: Update of data item "${1}" in VPN "${4}" script file failed.
+            echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started.
+        } | tee -ai "${SYSLOG}" 2> /dev/null
         return 1
     fi
     echo "$(lzdate)" [$$]: All data items in VPN "${4}" script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -404,8 +407,8 @@ EOF_DAEMON_DATA
 update_data() {
     local TRANSDATA=
     if [ "${TRANSFER}" = "1" ]; then
-        rm -f "${PATH_TMP}/${VPN_DATA_FILE}"
-        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}"
+        rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
+        rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
         TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
         if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             clear_all_event_interface
@@ -473,13 +476,15 @@ sleep 1s
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
     nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
     sleep 1s
-    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}"
+    rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
     lzdate() { eval echo "\$( date +"%F %T" )"; }
-    echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: ----------------------------------------------- >> "${SYSLOG}" 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: LZ VPNS daemon has been started again. >> "${SYSLOG}" 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon ------------- >> "${SYSLOG}" 2> /dev/null
-    echo "\$(lzdate)" [\$\$]: >> "${SYSLOG}" 2> /dev/null
+    {
+        echo "\$(lzdate)" [\$\$]:
+        echo "\$(lzdate)" [\$\$]: -----------------------------------------------
+        echo "\$(lzdate)" [\$\$]: LZ VPNS daemon has been started again.
+        echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon -------------
+        echo "\$(lzdate)" [\$\$]:
+    } >> "${SYSLOG}" 2> /dev/null
 }
 
 flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
@@ -620,11 +625,13 @@ start_service() {
 
 # -------------- Script Execution ---------------
 
-echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start...... | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\) | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
+{
+    echo "$(lzdate)" [$$]:
+    echo "$(lzdate)" [$$]: -----------------------------------------------
+    echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start......
+    echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\)
+    echo "$(lzdate)" [$$]: -----------------------------------------------
+} | tee -ai "${SYSLOG}" 2> /dev/null
 
 while true
 do
@@ -638,9 +645,11 @@ done
 
 unset_lock
 
-echo "$(lzdate)" [$$]: ----------------------------------------------- | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands executed! | tee -ai "${SYSLOG}" 2> /dev/null
-echo "$(lzdate)" [$$]: | tee -ai "${SYSLOG}" 2> /dev/null
+{
+    echo "$(lzdate)" [$$]: -----------------------------------------------
+    echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands executed!
+    echo "$(lzdate)" [$$]:
+} | tee -ai "${SYSLOG}" 2> /dev/null
 
 exit 0
 
