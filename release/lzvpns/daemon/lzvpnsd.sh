@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnsd.sh v1.0.0
+# lzvpnsd.sh v1.0.1
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
