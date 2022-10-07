@@ -1,7 +1,7 @@
 # amdwvpns
 Asus-Merlin Dual WAN VPN Support tool
 
-**v1.0.1**
+**v1.0.2**
 
 This project is used to solve the problem that the client can't access and use the VPN server inside the router when the dual WAN port of ASUS Merlin router is connected to the external network.
 
@@ -16,7 +16,7 @@ For the author's amdwprsct project, please visit the following address: https://
 
 **Installation & Operation**
 
-1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.1.tgz).
+1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.2.tgz).
 
 2. Upload the compressed package to the temporary directory in the router.
 
