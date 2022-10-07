@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnse.sh v1.0.1
+# lzvpnse.sh v1.0.2
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -79,6 +79,12 @@ get_data() {
     get_exdata && return 0
     get_transdata && return 0
     return 1
+}
+
+
+cleaning_user_data() {
+    [ "${WAN_ACCESS_PORT}" != "0" ] && [ "${WAN_ACCESS_PORT}" != "1" ] && WAN_ACCESS_PORT="0"
+    ! echo "${POLLING_TIME}" | grep -qE '^[0-9]$|^[1][0]$' && POLLING_TIME="3"
 }
 
 set_lock() {
@@ -307,7 +313,7 @@ print_status() {
 set_lock
 
 get_data || {
-    LZ_VERSION=v1.0.1
+    LZ_VERSION=v1.0.2
     WAN_ACCESS_PORT=0
     VPN_WAN_PORT=0
     POLLING_TIME=3
@@ -319,6 +325,8 @@ get_data || {
     IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
     SYSLOG="/tmp/syslog.log"
 }
+
+cleaning_user_data
 
 [ "${HAMMER}" != "${PATH_TMP%/*}/interface" ] && {
     {

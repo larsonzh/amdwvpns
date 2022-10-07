@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpns.sh v1.0.1
+# lzvpns.sh v1.0.2
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -27,13 +27,13 @@ WAN_ACCESS_PORT=0
 VPN_WAN_PORT=0
 
 # Polling time for detecting and maintaining PPTP/IPSec VPN service status.
-# 1~10s (The default is 3 seconds)
+# 0~10s (The default is 3 seconds; 0: No detection and maintenance)
 POLLING_TIME=3
 
 
 # --------------- Global Variable ---------------
 
-LZ_VERSION=v1.0.1
+LZ_VERSION=v1.0.2
 
 # System event log file
 SYSLOG="/tmp/syslog.log"
@@ -155,28 +155,26 @@ command_parsing() {
 }
 
 cleaning_user_data() {
-    local str="Primary WAN *"
-    [ "${WAN_ACCESS_PORT}" = "0" ] && str="Primary WAN"
+    [ "${WAN_ACCESS_PORT}" != "0" ] && [ "${WAN_ACCESS_PORT}" != "1" ] && WAN_ACCESS_PORT="0"
+    local str="Primary WAN"
     [ "${WAN_ACCESS_PORT}" = "1" ] && str="Secondary WAN"
     echo "$(lzdate)" [$$]: WAN Access Port: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
     str="System Allocation"
     [ "${VPN_WAN_PORT}" = "0" ] && str="Primary WAN"
     [ "${VPN_WAN_PORT}" = "1" ] && str="Secondary WAN"
     echo "$(lzdate)" [$$]: VPN WAN Port: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
-    str="5s"
-    [ "${POLLING_TIME}" -ge "0" ] && [ "${POLLING_TIME}" -le "10" ] && str="${POLLING_TIME}s"
+    ! echo "${POLLING_TIME}" | grep -qE '^[0-9]$|^[1][0]$' && POLLING_TIME="3"
+    str="${POLLING_TIME}s"
     echo "$(lzdate)" [$$]: Polling Time: "${str}" | tee -ai "${SYSLOG}" 2> /dev/null
-    [ "${WAN_ACCESS_PORT}" -lt "0" ] || [ "${WAN_ACCESS_PORT}" -gt "1" ] && WAN_ACCESS_PORT="0"
-    [ "${POLLING_TIME}" -lt "0" ] || [ "${POLLING_TIME}" -gt "10" ] && POLLING_TIME="3"
 }
 
 clear_daemon() {
-    local buffer="$( ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print $1}' )"
-    [ -z "${buffer}" ] && [ -z "$( ipset -q -L -n "${VPN_DAEMON_IP_SET_LOCK}" )" ] && {
+    ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
+    local buffer="$( ps | awk '$0 ~ "'"${VPN_DAEMON_SCRIPTS}"'" && !/awk/ {print $1}' )"
+    [ -z "${buffer}" ] && {
         [ "${1}" != "1" ] && echo "$(lzdate)" [$$]: No VPN daemon of this script is running. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
-    ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
     echo "${buffer}" | xargs kill -9 > /dev/null 2>&1
     [ "${1}" != "1" ] && echo "$(lzdate)" [$$]: The running VPN daemon of this script in the system has been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
@@ -470,7 +468,7 @@ craeate_daemon_start_scripts() {
 eval "exec ${LOCK_FILE_ID}<>${LOCK_FILE}"; flock -x "${LOCK_FILE_ID}" > /dev/null 2>&1;
 
 ipset -q destroy "${VPN_DAEMON_IP_SET_LOCK}"
-ps | grep "${VPN_DAEMON_SCRIPTS}" | grep -v grep | awk '{print \$1}' | xargs kill -9 > /dev/null 2>&1
+ps | awk '\$0 ~ "${VPN_DAEMON_SCRIPTS}" && !/awk/ {system("kill -9 "\$1" > /dev/null 2>&1")}'
 sleep 1s
 ! ps 2> /dev/null | grep "${VPN_DAEMON_SCRIPTS}" | grep -qv grep && {
     cru d "${START_DAEMON_TIMEER_ID}" > /dev/null 2>&1
@@ -494,6 +492,7 @@ EOF_START_DAEMON_SCRIPT
 }
 
 start_daemon() {
+    [ "${POLLING_TIME}" = "0" ] && return
     ! which nohup > /dev/null 2>&1 && return
     [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnsd.sh v1.0.1
+# lzvpnsd.sh v1.0.2
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -74,10 +74,10 @@ get_data || {
     VPN_DAEMON_IP_SET_LOCK="lzvpns_daemon_lock"
 }
 
-[ "${1}" -gt "0" ] && [ "${1}" -le "10" ] && POLLING_TIME="${1}" || POLLING_TIME="3"
-POLLING_TIME="${POLLING_TIME}s"
+! echo "${1}" | grep -qE '^[1-9]$|^[1][0]$' && exit 1
+POLLING_TIME="${1}s"
 
-ipset -! create "${VPN_DAEMON_IP_SET_LOCK}" list:set
+ipset -q create "${VPN_DAEMON_IP_SET_LOCK}" list:set
 
 PPTPD_ENABLE="$( nvram get pptpd_enable )"
 IPSEC_SERVER_ENABLE="$( nvram get ipsec_server_enable )"
