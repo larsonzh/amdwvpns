@@ -1,5 +1,5 @@
 #!/bin/sh
-# uninstall.sh v1.0.1
+# uninstall.sh v1.0.2
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -9,7 +9,7 @@
 
 # BEIGIN
 
-LZ_VERSION=v1.0.1
+LZ_VERSION=v1.0.2
 TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
