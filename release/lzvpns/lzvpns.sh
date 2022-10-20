@@ -518,17 +518,23 @@ create_event_interface() {
 EOF_INTERFACE
     fi
     [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
-    if ! grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" | grep -q "#!/bin/sh"; then
-        sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    if ! grep -m 1 '^.*$' "${PATH_BOOTLOADER}/${1}" | grep -q "#!/bin/sh"; then
+        if [ "$( grep -c '^.*$' "${PATH_BOOTLOADER}/${1}" )" = "0" ]; then
+            echo "#!/bin/sh" >> "${PATH_BOOTLOADER}/${1}"
+        elif grep '^.*$' "${PATH_BOOTLOADER}/${1}" | grep -q "#!/bin/sh"; then
+            sed -i -e '/!\/bin\/sh/d' -e '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"
+        else
+            sed -i '1i #!\/bin\/sh' "${PATH_BOOTLOADER}/${1}"
+        fi
     else
-        ! grep -m 1 '.' "${PATH_BOOTLOADER}/${1}" | grep -q "^#!/bin/sh" \
-            && sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1/g' "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+        ! grep -m 1 '^.*$' "${PATH_BOOTLOADER}/${1}" | grep -q "^#!/bin/sh" \
+            && sed -i 'l1 s:^.*\(#!/bin/sh.*$\):\1/g' "${PATH_BOOTLOADER}/${1}"
     fi
     if ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}"; then
-        sed -i "/${3}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-        sed -i "\$a ${2}/${3} # Added by LZ" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+        sed -i "/${3}/d" "${PATH_BOOTLOADER}/${1}"
+        sed -i "\$a ${2}/${3} # Added by LZ" "${PATH_BOOTLOADER}/${1}"
     fi
-    chmod +x "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
+    chmod +x "${PATH_BOOTLOADER}/${1}"
     ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return 1
     return 0
 }
@@ -621,16 +627,28 @@ start_service() {
     return 0
 }
 
+print_header() {
+    {
+        echo "$(lzdate)" [$$]:
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+        echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start......
+        echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\)
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+    } | tee -ai "${SYSLOG}" 2> /dev/null
+}
+
+print_tail() {
+    {
+        echo "$(lzdate)" [$$]: -----------------------------------------------
+        echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands executed!
+        echo "$(lzdate)" [$$]:
+    } | tee -ai "${SYSLOG}" 2> /dev/null
+}
+
 
 # -------------- Script Execution ---------------
 
-{
-    echo "$(lzdate)" [$$]:
-    echo "$(lzdate)" [$$]: -----------------------------------------------
-    echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands start......
-    echo "$(lzdate)" [$$]: By LZ \(larsonzhang@gmail.com\)
-    echo "$(lzdate)" [$$]: -----------------------------------------------
-} | tee -ai "${SYSLOG}" 2> /dev/null
+print_header
 
 while true
 do
@@ -644,11 +662,7 @@ done
 
 unset_lock
 
-{
-    echo "$(lzdate)" [$$]: -----------------------------------------------
-    echo "$(lzdate)" [$$]: LZ "${LZ_VERSION}" vpns script commands executed!
-    echo "$(lzdate)" [$$]:
-} | tee -ai "${SYSLOG}" 2> /dev/null
+print_tail
 
 exit 0
 
