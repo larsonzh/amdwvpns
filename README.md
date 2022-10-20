@@ -16,7 +16,7 @@ For the author's amdwprsct project, please visit the following address: https://
 
 **Installation & Operation**
 
-1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.2.tgz).
+1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.3.tgz).
 
 2. Upload the compressed package to the temporary directory in the router.
 

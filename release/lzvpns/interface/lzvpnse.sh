@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnse.sh v1.0.2
+# lzvpnse.sh v1.0.3
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -313,7 +313,7 @@ print_status() {
 set_lock
 
 get_data || {
-    LZ_VERSION=v1.0.2
+    LZ_VERSION=v1.0.3
     WAN_ACCESS_PORT=0
     VPN_WAN_PORT=0
     POLLING_TIME=3
