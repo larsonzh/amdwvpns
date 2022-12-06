@@ -1,15 +1,14 @@
 #!/bin/sh
-# uninstall.sh v1.0.3
+# uninstall.sh v1.0.4
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
-
 
 # uninstall script
 
 # BEIGIN
 
-LZ_VERSION=v1.0.3
+LZ_VERSION=v1.0.4
 TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
@@ -39,7 +38,7 @@ case ${ANSWER} in
             echo "  LZ script uninstallation failed."
             echo -e "  $(lzdate)\n\n"
         } | tee -ai "${SYSLOG}" 2> /dev/null
-        exit 1
+        exit "1"
     }
     ;;
 esac
@@ -51,7 +50,7 @@ if [ ! -f "${CURRENT_PATH}/lzvpns.sh" ]; then
         echo "  LZ script uninstallation failed."
         echo -e "  $(lzdate)\n\n"
     } | tee -ai "${SYSLOG}" 2> /dev/null
-    exit 1
+    exit "1"
 else
     chmod +x "${CURRENT_PATH}/lzvpns.sh" > /dev/null 2>&1
     /bin/sh "${CURRENT_PATH}/lzvpns.sh" stop
@@ -81,6 +80,6 @@ rmdir "${CURRENT_PATH}" > /dev/null 2>&1
     echo -e "  $(lzdate)\n\n"
 } | tee -ai "${SYSLOG}" 2> /dev/null
 
-exit 0
+exit "0"
 
 # END

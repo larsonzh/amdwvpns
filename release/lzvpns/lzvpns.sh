@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpns.sh v1.0.3
+# lzvpns.sh v1.0.4
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -9,7 +9,6 @@
 # Stop Service              ./lzvpns.sh stop
 # Forced Unlocking          ./lzvpns.sh unlock
 # Uninstall project files   ./uninstall.sh
-
 
 # Main execution script
 
@@ -26,14 +25,14 @@ WAN_ACCESS_PORT=0
 # 0--Primary WAN (Default), 1--Secondary WAN, Other--System Allocation
 VPN_WAN_PORT=0
 
-# Polling time for detecting and maintaining PPTP/IPSec VPN service status.
+# Polling time for detecting and maintaining PPTP/IPSec/WireGuard VPN service status.
 # 0~10s (The default is 3 seconds; 0: No detection and maintenance)
 POLLING_TIME=3
 
 
 # --------------- Global Variable ---------------
 
-LZ_VERSION=v1.0.3
+LZ_VERSION=v1.0.4
 
 # System event log file
 SYSLOG="/tmp/syslog.log"
@@ -67,22 +66,26 @@ PATH_DAEMON="${PATH_LZ}/daemon"
 PATH_TMP="${PATH_LZ}/tmp"
 
 # Router WAN port routing table ID
-WAN0=100; WAN1=200;
+WAN0="100"
+WAN1="200"
 
 ## Router host access WAN policy routing rule priority
-IP_RULE_PRIO_HOST=999
+IP_RULE_PRIO_HOST="999"
 
 # VPN client access WAN policy routing rule priority
-IP_RULE_PRIO_VPN=998
+IP_RULE_PRIO_VPN="998"
 
 ## OpenVPN subnet address list data set
 OVPN_SUBNET_IP_SET="lzvpns_openvpn_subnet"
 
-# PPTP VPN client local address list dataset
+# PPTP VPN client local address list data set
 PPTP_CLIENT_IP_SET="lzvpns_pptp_client"
 
 # IPSec VPN subnet address list data set
 IPSEC_SUBNET_IP_SET="lzvpns_ipsec_subnet"
+
+# WireGuard client local address list data set
+WIREGUARD_CLIENT_IP_SET="lzvpns_wireguard_client"
 
 # VPN daemon startup script
 VPN_DAEMON_START_SCRIPT="lzvpns_start_daemon.sh"
@@ -112,7 +115,7 @@ TRANSFER=0
 lzdate() { eval echo "$( date +"%F %T" )"; }
 
 set_lock() {
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 1
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return "1"
     echo "lzvpns_${HAMMER}" >> "${INSTANCE_LIST}"
     [ ! -d "${PATH_LOCK}" ] && { mkdir -p "${PATH_LOCK}" > /dev/null 2>&1; chmod 777 "${PATH_LOCK}" > /dev/null 2>&1; }
     eval "exec ${LOCK_FILE_ID}<>${LOCK_FILE}"
@@ -121,10 +124,10 @@ set_lock() {
     if grep -q 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null; then
         [ "$( grep 'lzvpns_' "${INSTANCE_LIST}" 2> /dev/null | sed -n 1p | sed -e 's/^[ ]*//g' -e 's/[ ]*$//g' )" = "lzvpns_${HAMMER}" ] && {
             echo "$(lzdate)" [$$]: Dual WAN VPN Support service is being started by another instance. | tee -ai "${SYSLOG}" 2> /dev/null
-            return 1
+            return "1"
         }
     fi
-    return 0
+    return "0"
 }
 
 forced_unlock() {
@@ -135,7 +138,7 @@ forced_unlock() {
     else
         echo "$(lzdate)" [$$]: There is no program synchronization lock. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
-    return 0
+    return "0"
 }
 
 unset_lock() {
@@ -146,12 +149,12 @@ unset_lock() {
 }
 
 command_parsing() {
-    [ "${PARAM_TOTAL}" = "0" ] && return 0
-    [ "${HAMMER}" = "${STOP_RUN}" ] && return 0
-    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return 0
+    [ "${PARAM_TOTAL}" = "0" ] && return "0"
+    [ "${HAMMER}" = "${STOP_RUN}" ] && return "0"
+    [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return "0"
     HAMMER="error"
     echo "$(lzdate)" [$$]: Oh, you\'re using the wrong command. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 1
+    return "1"
 }
 
 cleaning_user_data() {
@@ -191,11 +194,11 @@ clear_time_task() {
 }
 
 delte_ip_rules() {
-    local buffer="$( ip rule list | grep -wo "^${1}" )"
-    [ -z "${buffer}" ] && return 1
+    local buffer="$( ip rule list | grep -o "^${1}:" )"
+    [ -z "${buffer}" ] && return "1"
     echo "${buffer}" | awk '{print "ip rule del prio "$1} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
-    return 0
+    return "0"
 }
 
 restore_ip_rules() {
@@ -212,12 +215,12 @@ restore_ip_rules() {
 }
 
 restore_sub_routing_table() {
-    local buffer="$( ip route list table "${1}" | grep -E 'pptp|tap|tun' )"
-    [ -z "${buffer}" ] && return 1
+    local buffer="$( ip route list table "${1}" | grep -E 'pptp|tap|tun|wgs' )"
+    [ -z "${buffer}" ] && return "1"
     echo "${buffer}" \
-        | awk '{print "ip route del "$0"'" table ${1}"'"}  END{print "ip route flush cache"}' \
+        | awk '{print "ip route del "$0"'" table ${1}"'"} END{print "ip route flush cache"}' \
         | awk '{system($0" > /dev/null 2>&1")}'
-    return 0
+    return "0"
 }
 
 restore_routing_table() {
@@ -240,7 +243,7 @@ restore_routing_table() {
 restore_balance_chain() {
     ! iptables -t mangle -L PREROUTING 2> /dev/null | grep -qw balance && return
     local number="$( iptables -t mangle -L balance -v -n --line-numbers 2> /dev/null \
-            | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|${IPSEC_SUBNET_IP_SET}" \
+            | grep -Ew "${OVPN_SUBNET_IP_SET}|${PPTP_CLIENT_IP_SET}|${IPSEC_SUBNET_IP_SET}|${WIREGUARD_CLIENT_IP_SET}" \
             | cut -d " " -f 1 | grep '^[0-9]*' | sort -nr )"
     [ -z "${number}" ] && {
         echo "$(lzdate)" [$$]: None of VPN item in the balance chain. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -256,13 +259,14 @@ restore_balance_chain() {
 
 clear_ipsets() {
     [ -z "$( ipset -q -L -n "${OVPN_SUBNET_IP_SET}" )" ] && [ -z "$( ipset -q -L -n "${PPTP_CLIENT_IP_SET}" )" ] \
-        && [ -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" )" ] && {
+        && [ -z "$( ipset -q -L -n "${IPSEC_SUBNET_IP_SET}" )" ] && [ -z "$( ipset -q -L -n "${WIREGUARD_CLIENT_IP_SET}" )" ] && {
         echo "$(lzdate)" [$$]: None of VPN data set of this script residing in the system memory. | tee -ai "${SYSLOG}" 2> /dev/null
         return
     }
     ipset -q flush "${OVPN_SUBNET_IP_SET}" && ipset -q destroy "${OVPN_SUBNET_IP_SET}"
     ipset -q flush "${PPTP_CLIENT_IP_SET}" && ipset -q destroy "${PPTP_CLIENT_IP_SET}"
     ipset -q flush "${IPSEC_SUBNET_IP_SET}" && ipset -q destroy "${IPSEC_SUBNET_IP_SET}"
+    ipset -q flush "${WIREGUARD_CLIENT_IP_SET}" && ipset -q destroy "${WIREGUARD_CLIENT_IP_SET}"
     echo "$(lzdate)" [$$]: All VPN data sets of this script residing in the system memory have been cleared. | tee -ai "${SYSLOG}" 2> /dev/null
 }
 
@@ -280,10 +284,10 @@ init_directory() {
 }
 
 clear_event_interface() {
-    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
+    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return "1"
     ! grep -q "${2}" "${PATH_BOOTLOADER}/${1}" 2> /dev/null && return 2
     sed -i "/${2}/d" "${PATH_BOOTLOADER}/${1}" > /dev/null 2>&1
-    return 0
+    return "0"
 }
 
 clear_all_event_interface() {
@@ -293,7 +297,7 @@ clear_all_event_interface() {
     if clear_event_interface "$BOOTLOADER_FILE" "${PROJECT_ID}"; then
         echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
-    return 0
+    return "0"
 }
 
 delete_data_file() {
@@ -321,22 +325,22 @@ check_file() {
         clear_all_event_interface
         delete_data_file
         echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     done
     echo "$(lzdate)" [$$]: Script files are located in the specified directory location. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 update_data_item() {
-    local data_item="$( grep -E "^${1}=|^[ ]*${1}=" "${3}" 2> /dev/null )"
-    [ -z "${data_item}" ] && return 1
+    local data_item="$( grep -E "^[ \t]*${1}=" "${3}" 2> /dev/null )"
+    [ -z "${data_item}" ] && return "1"
     [ "${data_item}" != "${1}=\"${2}\"" ] && {
-        sed -i "s:^.*${1}=.*$:${1}=\"${2}\":g" "${3}" > /dev/null 2>&1
+        sed -i "s:^[ \t]*${1}=.*$:${1}=\"${2}\":g" "${3}" > /dev/null 2>&1
         data_item="$( grep "^${1}=" "${3}" 2> /dev/null )"
         [ "${data_item#*=}" != "\"${2}\"" ] && return 3
         return 2
     }
-    return 0
+    return "0"
 }
 
 consistency_update() {
@@ -348,7 +352,7 @@ consistency_update() {
             echo "$(lzdate)" [$$]: Data item consistency confirmation in VPN "${4}" script file failed.
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started.
         } | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     elif [ "${retval}" = "2" ]; then
         echo "$(lzdate)" [$$]: The data item "${1}" in VPN "${4}" script file has been updated. | tee -ai "${SYSLOG}" 2> /dev/null
     elif [ "${retval}" = "3" ]; then
@@ -356,10 +360,10 @@ consistency_update() {
             echo "$(lzdate)" [$$]: Update of data item "${1}" in VPN "${4}" script file failed.
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started.
         } | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     fi
     echo "$(lzdate)" [$$]: All data items in VPN "${4}" script file have passed the consistency confirmation. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 trans_event_data() {
@@ -374,14 +378,15 @@ ${IP_RULE_PRIO_VPN}
 ${OVPN_SUBNET_IP_SET}
 ${PPTP_CLIENT_IP_SET}
 ${IPSEC_SUBNET_IP_SET}
+${WIREGUARD_CLIENT_IP_SET}
 ${SYSLOG}
 EOF_EVENT_DATA
     [ ! -f "${PATH_TMP}/${VPN_DATA_FILE}" ] && {
         echo "$(lzdate)" [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     }
     echo "$(lzdate)" [$$]: Successfully transferred data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 trans_daemon_data() {
@@ -392,14 +397,15 @@ ${WAN1}
 ${VPN_EVENT_INTERFACE_SCRIPTS}
 ${PPTP_CLIENT_IP_SET}
 ${IPSEC_SUBNET_IP_SET}
+${WIREGUARD_CLIENT_IP_SET}
 ${VPN_DAEMON_IP_SET_LOCK}
 EOF_DAEMON_DATA
     [ ! -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" ] && {
         echo "$(lzdate)" [$$]: Failed to transfer data to VPN event data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     }
     echo "$(lzdate)" [$$]: Successfully transferred data to VPN daemon data exchange file. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 update_data() {
@@ -407,15 +413,15 @@ update_data() {
     if [ "${TRANSFER}" = "1" ]; then
         rm -f "${PATH_TMP}/${VPN_DATA_FILE}" > /dev/null 2>&1
         rm -f "${PATH_TMP}/${VPN_DAEMON_DATA_FILE}" > /dev/null 2>&1
-        TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${SYSLOG}>"
+        TRANSDATA="${LZ_VERSION}>${WAN_ACCESS_PORT}>${VPN_WAN_PORT}>${POLLING_TIME}>${WAN0}>${WAN1}>${IP_RULE_PRIO_VPN}>${OVPN_SUBNET_IP_SET}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${WIREGUARD_CLIENT_IP_SET}>${SYSLOG}>"
         if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "event processing"; then
             clear_all_event_interface
-            return 1
+            return "1"
         fi
-        TRANSDATA="${POLLING_TIME}>${WAN0}>${WAN1}>${VPN_EVENT_INTERFACE_SCRIPTS}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${VPN_DAEMON_IP_SET_LOCK}>"
+        TRANSDATA="${POLLING_TIME}>${WAN0}>${WAN1}>${VPN_EVENT_INTERFACE_SCRIPTS}>${PPTP_CLIENT_IP_SET}>${IPSEC_SUBNET_IP_SET}>${WIREGUARD_CLIENT_IP_SET}>${VPN_DAEMON_IP_SET_LOCK}>"
         if ! consistency_update "TRANSDATA" "${TRANSDATA}" "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "daemon"; then
             clear_all_event_interface
-            return 1
+            return "1"
         fi
     else
         TRANSDATA=">>>>>>>>>>>"
@@ -424,23 +430,23 @@ update_data() {
         ! trans_event_data && {
             clear_all_event_interface
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-            return 1
+            return "1"
         }
         ! trans_daemon_data && {
             clear_all_event_interface
             echo "$(lzdate)" [$$]: Dual WAN VPN support service can\'t be started. | tee -ai "${SYSLOG}" 2> /dev/null
-            return 1
+            return "1"
         }
     fi
-   return 0
+   return "0"
 }
 
 set_wan_access_port() {
     [ "${WAN_ACCESS_PORT}" != "0" ] && [ "${WAN_ACCESS_PORT}" != "1" ] && return 2
-    local router_local_ip="$( ifconfig br0 2> /dev/null | grep "inet addr:" | awk -F ":" '{print $2}' | awk '{print $1}' )" 
+    local router_local_ip="$( ifconfig br0 2> /dev/null | grep "inet addr:" | awk -F: '{print $2}' | awk '{print $1}' )" 
     [ -z "${router_local_ip}" ] && {
         echo "$(lzdate)" [$$]: Unable to get local IP of router host. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     }
     local access_wan="${WAN0}"
     [ "${WAN_ACCESS_PORT}" = "1" ] && access_wan="${WAN1}"
@@ -452,9 +458,9 @@ set_wan_access_port() {
         echo "$(lzdate)" [$$]: WAN access port has been set successfully. | tee -ai "${SYSLOG}" 2> /dev/null
     else
         echo "$(lzdate)" [$$]: WAN access port configuration failed. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     fi
-    return 0
+    return "0"
 }
 
 craeate_daemon_start_scripts() {
@@ -494,7 +500,7 @@ EOF_START_DAEMON_SCRIPT
 start_daemon() {
     [ "${POLLING_TIME}" = "0" ] && return
     ! which nohup > /dev/null 2>&1 && return
-    [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
+    [ -z "$( nvram get "wgs_enable" )" ] && [ "$( nvram get pptpd_enable )" != "1" ] && [ "$( nvram get ipsec_server_enable)" != "1" ] && return
 
     nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
  
@@ -517,7 +523,7 @@ create_event_interface() {
 #!/bin/sh
 EOF_INTERFACE
     fi
-    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return 1
+    [ ! -f "${PATH_BOOTLOADER}/${1}" ] && return "1"
     if ! grep -m 1 '^.*$' "${PATH_BOOTLOADER}/${1}" | grep -q "#!/bin/sh"; then
         if [ "$( grep -c '^.*$' "${PATH_BOOTLOADER}/${1}" )" = "0" ]; then
             echo "#!/bin/sh" >> "${PATH_BOOTLOADER}/${1}"
@@ -535,8 +541,8 @@ EOF_INTERFACE
         sed -i "\$a ${2}/${3} # Added by LZ" "${PATH_BOOTLOADER}/${1}"
     fi
     chmod +x "${PATH_BOOTLOADER}/${1}"
-    ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return 1
-    return 0
+    ! grep -q "${2}/${3}" "${PATH_BOOTLOADER}/${1}" && return "1"
+    return "0"
 }
 
 register_event_interface_error() {
@@ -557,7 +563,7 @@ register_event_interface() {
         echo "$(lzdate)" [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
         register_event_interface_error
         echo "$(lzdate)" [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     fi
     if create_event_interface "${VPN_EVENT_FILE}" "${PATH_INTERFACE}" "${VPN_EVENT_INTERFACE_SCRIPTS}"; then
         echo "$(lzdate)" [$$]: Successfully registered VPN event interface. | tee -ai "${SYSLOG}" 2> /dev/null
@@ -567,9 +573,9 @@ register_event_interface() {
             && echo "$(lzdate)" [$$]: Uninstallation script started boot event interface successfully. | tee -ai "${SYSLOG}" 2> /dev/null
         register_event_interface_error
         echo "$(lzdate)" [$$]: Dual WAN VPN Support service failed to start. | tee -ai "${SYSLOG}" 2> /dev/null
-        return 1
+        return "1"
     fi
-    return 0
+    return "0"
 }
 
 dual_wan_error() {
@@ -580,17 +586,17 @@ dual_wan_error() {
     else
         echo "$(lzdate)" [$$]: Script boot start event interface registration failed. | tee -ai "${SYSLOG}" 2> /dev/null
     fi
-    return 0
+    return "0"
 }
 
 detect_dual_wan() {
     if ! ip route list | grep -q nexthop; then
         echo "$(lzdate)" [$$]: The dual WAN network is not connected. | tee -ai "${SYSLOG}" 2> /dev/null
         dual_wan_error
-        return 1
+        return "1"
     fi
     echo "$(lzdate)" [$$]: The dual WAN network has been connected. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 init_service() {
@@ -603,28 +609,28 @@ init_service() {
     restore_balance_chain
     clear_ipsets
     init_directory
-    check_file || return 1
-    return 0
+    check_file || return "1"
+    return "0"
 }
 
 stop_service() {
-    [ "${HAMMER}" != "${STOP_RUN}" ] && return 1
+    [ "${HAMMER}" != "${STOP_RUN}" ] && return "1"
     clear_all_event_interface
     delete_data_file
     echo "$(lzdate)" [$$]: Dual WAN VPN Support service has stopped. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 start_service() {
-    update_data || return 1
-    detect_dual_wan || return 1
+    update_data || return "1"
+    detect_dual_wan || return "1"
     echo "$(lzdate)" [$$]: Start LZ VPN support service...... | tee -ai "${SYSLOG}" 2> /dev/null
     set_wan_access_port
     /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" "${PATH_INTERFACE}"
     start_daemon
-    register_event_interface || return 1
+    register_event_interface || return "1"
     echo "$(lzdate)" [$$]: LZ VPN support service started successfully. | tee -ai "${SYSLOG}" 2> /dev/null
-    return 0
+    return "0"
 }
 
 print_header() {
@@ -664,6 +670,6 @@ unset_lock
 
 print_tail
 
-exit 0
+exit "0"
 
 # END

@@ -1,5 +1,5 @@
 #!/bin/sh
-# install.sh v1.0.3
+# install.sh v1.0.4
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -8,12 +8,11 @@
 # JFFS partition            ./install.sh
 # the Entware of USB disk   ./install.sh entware
 
-
 # install script
 
 # BEIGIN
 
-LZ_VERSION=v1.0.3
+LZ_VERSION=v1.0.4
 TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
@@ -36,7 +35,7 @@ if [ -z "${USER}" ]; then
         echo "  LZ script installation failed."
         echo -e "  $(lzdate)\n\n"
     } | tee -ai "${SYSLOG}" 2> /dev/null
-    exit 1
+    exit "1"
 elif [ "${USER}" = "root" ]; then
     {
         echo "  The root user can\'t install this software."
@@ -45,7 +44,7 @@ elif [ "${USER}" = "root" ]; then
         echo "  LZ script installation failed."
         echo -e "  $(lzdate)\n\n"
     } | tee -ai "${SYSLOG}" 2> /dev/null
-    exit 1
+    exit "1"
 fi
 
 AVAL_SPACE=
@@ -71,7 +70,7 @@ if [ "${1}" = "entware" ]; then
             echo "  LZ script installation failed."
             echo -e "  $(lzdate)\n\n"
         } | tee -ai "${SYSLOG}" 2> /dev/null
-        exit 1
+        exit "1"
     fi
 else
     AVAL_SPACE="$( df | grep -w "/jffs" | awk '{print $4}' )"
@@ -95,7 +94,7 @@ if [ "${AVAL_SPACE}" != "Unknown" ] && [ "${SPACE_REQU}" != "Unknown" ]; then
             echo "  LZ script installation failed."
             echo -e "  $(lzdate)\n\n"
         } | tee -ai "${SYSLOG}" 2> /dev/null
-        exit 1
+        exit "1"
     fi
 elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
     echo "  Available space is uncertain."
@@ -114,7 +113,7 @@ elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
                 echo "  The installation was terminated by the current user."
                 echo -e "  $(lzdate)\n\n"
             } | tee -ai "${SYSLOG}" 2> /dev/null
-            exit 1
+            exit "1"
         }
         ;;
         *)
@@ -124,7 +123,7 @@ elif [ "${AVAL_SPACE}" = "Unknown" ] || [ "${SPACE_REQU}" = "Unknown" ]; then
                 echo "  LZ script installation failed."
                 echo -e "  $(lzdate)\n\n"
             } | tee -ai "${SYSLOG}" 2> /dev/null
-            exit 1
+            exit "1"
         }
         ;;
     esac
@@ -142,7 +141,7 @@ if ! mkdir -p "${PATH_LZ}" > /dev/null 2>&1; then
         echo "  LZ script installation failed."
         echo -e "  $(lzdate)\n\n"
     } | tee -ai "${SYSLOG}" 2> /dev/null
-    exit 1
+    exit "1"
 fi
 
 if ! cp -rpf "${CURRENT_PATH}/lzvpns" "${PATH_BASE}" > /dev/null 2>&1; then
@@ -159,7 +158,7 @@ if ! cp -rpf "${CURRENT_PATH}/lzvpns" "${PATH_BASE}" > /dev/null 2>&1; then
         echo "  Software installation failed."
         echo -e "  $(lzdate)\n\n"
     } | tee -ai "${SYSLOG}" 2> /dev/null
-    exit 1
+    exit "1"
 else
     cp -rpf "${CURRENT_PATH}/LICENSE" "${PATH_LZ}" > /dev/null 2>&1
     cp -rpf "${CURRENT_PATH}/README.md" "${PATH_LZ}" > /dev/null 2>&1
@@ -183,6 +182,6 @@ chmod -R 775 "${PATH_LZ}" > /dev/null 2>&1
     echo -e "  $(lzdate)\n\n"
 } | tee -ai "${SYSLOG}" 2> /dev/null
 
-exit 0
+exit "0"
 
 # END

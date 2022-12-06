@@ -1,11 +1,11 @@
 # amdwvpns
 Asus-Merlin Dual WAN VPN Support tool
 
-**v1.0.3**
+**v1.0.4**
 
 This project is used to solve the problem that the client can't access and use the VPN server inside the router when the dual WAN port of ASUS Merlin router is connected to the external network.
 
-The router VPN servers involved in this project include OpenVPN server, PPTP VPN server and IPSec VPN server.
+The router VPN servers involved in this project include OpenVPN server, PPTP VPN server, IPSec VPN server and WireGuard server.
 
 The project script can be deployed and run in the JFFS partition of the router or the Entware environment in the USB disk.
 
@@ -16,7 +16,7 @@ For the author's amdwprsct project, please visit the following address: https://
 
 **Installation & Operation**
 
-1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.3.tgz).
+1. Download the compressed package named "lzvpns-[version ID].tgz" (e.g., lzvpns-v1.0.4.tgz).
 
 2. Upload the compressed package to the temporary directory in the router.
 
@@ -51,7 +51,7 @@ WAN_ACCESS_PORT=0
 # 0--Primary WAN (Default), 1--Secondary WAN, Other--System Allocation
 VPN_WAN_PORT=0
 
-# Polling time for detecting and maintaining PPTP/IPSec VPN service status.
+# Polling time for detecting and maintaining PPTP/IPSec/WireGuard VPN service status.
 # 1~10s (The default is 3 seconds)
 POLLING_TIME=3
 
