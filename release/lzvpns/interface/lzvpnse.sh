@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnse.sh v1.0.4
+# lzvpnse.sh v1.0.5
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -101,7 +101,7 @@ unset_lock() {
     flock -u "${LOCK_FILE_ID}" > /dev/null 2>&1
 }
 
-lzdate() { eval echo "$( date +"%F %T" )"; }
+lzdate() { date +"%F %T"; }
 
 delte_vpn_rules() {
     ip rule list | awk -v count="0" -F: '$1 == "'"${IP_RULE_PRIO_VPN}"'" {system("ip rule del prio "$1" > /dev/null 2>&1"); count++} \
@@ -316,7 +316,7 @@ print_status() {
 set_lock
 
 get_data || {
-    LZ_VERSION=v1.0.4
+    LZ_VERSION=v1.0.5
     WAN_ACCESS_PORT=0
     VPN_WAN_PORT=0
     POLLING_TIME=3

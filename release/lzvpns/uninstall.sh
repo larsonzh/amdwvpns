@@ -1,5 +1,5 @@
 #!/bin/sh
-# uninstall.sh v1.0.4
+# uninstall.sh v1.0.5
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -8,12 +8,12 @@
 
 # BEIGIN
 
-LZ_VERSION=v1.0.4
+LZ_VERSION=v1.0.5
 TIMEOUT=10
 CURRENT_PATH="${0%/*}"
 [ "${CURRENT_PATH:0:1}" != '/' ] && CURRENT_PATH="$( pwd )${CURRENT_PATH#*.}"
 SYSLOG="/tmp/syslog.log"
-lzdate() { eval echo "$( date +"%F %T" )"; }
+lzdate() {  date +"%F %T"; }
 
 {
     echo -e "  $(lzdate)\n\n"

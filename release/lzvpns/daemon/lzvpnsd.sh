@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpnsd.sh v1.0.4
+# lzvpnsd.sh v1.0.5
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -140,8 +140,7 @@ do
         WGS_ENABLE="$( nvram get "wgs_enable" )"
         [ "${WGS_ENABLE}" = "1" ] && [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] \
             && /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
-        [ "${WGS_ENABLE}" = "0" ] && ipset -q -L "${WIREGUARD_CLIENT_IP_SET}" | grep -qE '([0-9]{1,3}[\.]){3}[0-9]{1,3}([\/][0-9]{1,2}){0,1}' \
-            && [ -f "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}" ] && /bin/sh "${PATH_INTERFACE}/${VPN_EVENT_INTERFACE_SCRIPTS}"
+        [ "${WGS_ENABLE}" = "0" ] && update_vpn_client_sub_route "wgs" "${WIREGUARD_CLIENT_IP_SET}"
     fi
     if [ "${PPTPD_ENABLE}" = "1" ]; then
         PPTPD_ENABLE="$( nvram get "pptpd_enable" )"

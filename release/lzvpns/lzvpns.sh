@@ -1,5 +1,5 @@
 #!/bin/sh
-# lzvpns.sh v1.0.4
+# lzvpns.sh v1.0.5
 # By LZ (larsonzhang@gmail.com)
 
 # LZ VPNS script for asuswrt/merlin based router
@@ -32,7 +32,7 @@ POLLING_TIME=3
 
 # --------------- Global Variable ---------------
 
-LZ_VERSION=v1.0.4
+LZ_VERSION=v1.0.5
 
 # System event log file
 SYSLOG="/tmp/syslog.log"
@@ -112,7 +112,7 @@ TRANSFER=0
 
 # ------------------ Function -------------------
 
-lzdate() { eval echo "$( date +"%F %T" )"; }
+lzdate() { date +"%F %T"; }
 
 set_lock() {
     [ "${HAMMER}" = "${FORCED_UNLOCKING}" ] && return "1"
@@ -481,13 +481,12 @@ sleep 1s
     nohup /bin/sh "${PATH_DAEMON}/${VPN_DAEMON_SCRIPTS}" "${POLLING_TIME}" > /dev/null 2>&1 &
     sleep 1s
     rm -f "${PATH_TMP}/${VPN_DAEMON_START_SCRIPT}" > /dev/null 2>&1
-    lzdate() { eval echo "\$( date +"%F %T" )"; }
     {
-        echo "\$(lzdate)" [\$\$]:
-        echo "\$(lzdate)" [\$\$]: -----------------------------------------------
-        echo "\$(lzdate)" [\$\$]: LZ VPNS daemon has been started again.
-        echo "\$(lzdate)" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon -------------
-        echo "\$(lzdate)" [\$\$]:
+        echo "\$( date +"%F %T" )" [\$\$]:
+        echo "\$( date +"%F %T" )" [\$\$]: -----------------------------------------------
+        echo "\$( date +"%F %T" )" [\$\$]: LZ VPNS daemon has been started again.
+        echo "\$( date +"%F %T" )" [\$\$]: ----------- LZ "${LZ_VERSION}" VPNS Daemon -------------
+        echo "\$( date +"%F %T" )" [\$\$]:
     } >> "${SYSLOG}" 2> /dev/null
 }
 
